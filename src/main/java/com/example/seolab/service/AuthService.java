@@ -1,7 +1,9 @@
 package com.example.seolab.service;
 
 import com.example.seolab.dto.request.LoginRequest;
+import com.example.seolab.dto.request.SignUpRequest;
 import com.example.seolab.dto.response.LoginResponse;
+import com.example.seolab.dto.response.SignUpResponse;
 import com.example.seolab.dto.response.TokenResponse;
 import com.example.seolab.entity.User;
 import com.example.seolab.repository.UserRepository;
@@ -87,5 +89,29 @@ public class AuthService {
 		refreshTokenCookie.setPath("/");
 		refreshTokenCookie.setMaxAge(0);
 		response.addCookie(refreshTokenCookie);
+	}
+
+	public SignUpResponse signUp(SignUpRequest signUpRequest) {
+		// 이메일 중복 체크
+		if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+			throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
+		}
+
+		// 이메일에서 username 추출 (@ 앞부분)
+		String username = signUpRequest.getEmail().split("@")[0];
+
+		// 사용자 생성
+		User user = User.builder()
+			.email(signUpRequest.getEmail())
+			.username(username)
+			.passwordHash(passwordEncoder.encode(signUpRequest.getPassword()))
+			.build();
+
+		User savedUser = userRepository.save(user);
+
+		return SignUpResponse.builder()
+			.email(savedUser.getEmail())
+			.username(savedUser.getUsername())
+			.build();
 	}
 }
