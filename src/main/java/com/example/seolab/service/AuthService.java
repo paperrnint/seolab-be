@@ -1,0 +1,91 @@
+package com.example.seolab.service;
+
+import com.example.seolab.dto.request.LoginRequest;
+import com.example.seolab.dto.response.LoginResponse;
+import com.example.seolab.dto.response.TokenResponse;
+import com.example.seolab.entity.User;
+import com.example.seolab.repository.UserRepository;
+import com.example.seolab.security.JwtUtil;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
+public class AuthService {
+
+	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final JwtUtil jwtUtil;
+	private final AuthenticationManager authenticationManager;
+
+	public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
+		// 인증 시도
+		authenticationManager.authenticate(
+			new UsernamePasswordAuthenticationToken(
+				loginRequest.getEmail(),
+				loginRequest.getPassword()
+			)
+		);
+
+		// 인증 성공 시 사용자 정보 조회
+		User user = userRepository.findByEmail(loginRequest.getEmail())
+			.orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+		// JWT 토큰 생성
+		String accessToken = jwtUtil.generateAccessToken(user);
+		String refreshToken = jwtUtil.generateRefreshToken(user);
+
+		// Refresh Token을 HTTP Only 쿠키로 설정
+		Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken);
+		refreshTokenCookie.setHttpOnly(true);
+		refreshTokenCookie.setSecure(true); // HTTPS에서만 전송
+		refreshTokenCookie.setPath("/");
+		refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+		response.addCookie(refreshTokenCookie);
+
+		return LoginResponse.builder()
+			.accessToken(accessToken)
+			.email(user.getEmail())
+			.username(user.getUsername())
+			.build();
+	}
+
+	public TokenResponse refreshToken(String refreshToken) {
+		// Refresh token 유효성 검증
+		if (!jwtUtil.validateToken(refreshToken)) {
+			throw new RuntimeException("유효하지 않은 refresh token입니다.");
+		}
+
+		// 토큰에서 이메일 추출
+		String email = jwtUtil.extractUsername(refreshToken);
+
+		// 사용자 조회
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+		// 새로운 Access Token 생성
+		String newAccessToken = jwtUtil.generateAccessToken(user);
+
+		return TokenResponse.builder()
+			.accessToken(newAccessToken)
+			.build();
+	}
+
+	public void logout(HttpServletResponse response) {
+		// Refresh Token 쿠키 삭제
+		Cookie refreshTokenCookie = new Cookie("refreshToken", null);
+		refreshTokenCookie.setHttpOnly(true);
+		refreshTokenCookie.setSecure(true);
+		refreshTokenCookie.setPath("/");
+		refreshTokenCookie.setMaxAge(0);
+		response.addCookie(refreshTokenCookie);
+	}
+}
