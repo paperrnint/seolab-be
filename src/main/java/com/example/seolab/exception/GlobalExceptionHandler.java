@@ -1,5 +1,6 @@
 package com.example.seolab.exception;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,5 +61,12 @@ public class GlobalExceptionHandler {
 		Map<String, String> error = new HashMap<>();
 		error.put("message", "서버 오류가 발생했습니다.");
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+	}
+
+	@ExceptionHandler({JwtException.class, io.jsonwebtoken.security.SecurityException.class})
+	public ResponseEntity<Map<String, String>> handleJwtException(Exception ex) {
+		Map<String, String> error = new HashMap<>();
+		error.put("message", "유효하지 않은 토큰입니다.");
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
 }
