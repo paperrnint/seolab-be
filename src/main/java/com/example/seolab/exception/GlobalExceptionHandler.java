@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
@@ -21,13 +22,20 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<Map<String, String>> handleValidationExceptions(
 		MethodArgumentNotValidException ex) {
-		Map<String, String> errors = new HashMap<>();
-		ex.getBindingResult().getAllErrors().forEach((error) -> {
-			String fieldName = ((FieldError) error).getField();
-			String errorMessage = error.getDefaultMessage();
-			errors.put(fieldName, errorMessage);
-		});
-		return ResponseEntity.badRequest().body(errors);
+
+		// validation 오류들을 하나의 메시지로 합치기
+		String errorMessage = ex.getBindingResult().getAllErrors().stream()
+			.map(error -> {
+				if (error instanceof FieldError) {
+					return error.getDefaultMessage();
+				}
+				return error.getDefaultMessage();
+			})
+			.collect(Collectors.joining(", "));
+
+		Map<String, String> error = new HashMap<>();
+		error.put("message", errorMessage);
+		return ResponseEntity.badRequest().body(error);
 	}
 
 	@ExceptionHandler(BadCredentialsException.class)
@@ -46,11 +54,18 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
 	}
 
+	// 이메일 중복 오류를 409 Conflict로 처리
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<Map<String, String>> handleIllegalArgumentException(
 		IllegalArgumentException ex) {
 		Map<String, String> error = new HashMap<>();
 		error.put("message", ex.getMessage());
+
+		// 이메일 중복인 경우 409 Conflict 반환
+		if (ex.getMessage().contains("이미 사용중인 이메일")) {
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+		}
+
 		return ResponseEntity.badRequest().body(error);
 	}
 
