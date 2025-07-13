@@ -5,6 +5,7 @@ import com.example.seolab.dto.request.SignUpRequest;
 import com.example.seolab.dto.response.LoginResponse;
 import com.example.seolab.dto.response.SignUpResponse;
 import com.example.seolab.dto.response.TokenResponse;
+import com.example.seolab.dto.response.UserInfoResponse;
 import com.example.seolab.entity.User;
 import com.example.seolab.repository.UserRepository;
 import com.example.seolab.security.JwtUtil;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -56,7 +58,7 @@ public class AuthService {
 		return LoginResponse.builder()
 			.accessToken(accessToken)
 			.email(user.getEmail())
-			.username(user.getUsername())
+			.username(user.getDisplayName()) // 실제 username 필드 반환
 			.build();
 	}
 
@@ -111,7 +113,18 @@ public class AuthService {
 
 		return SignUpResponse.builder()
 			.email(savedUser.getEmail())
-			.username(savedUser.getUsername())
+			.username(savedUser.getDisplayName()) // 실제 username 필드 반환
+			.build();
+	}
+
+	public UserInfoResponse getCurrentUser(Authentication authentication) {
+		String email = authentication.getName();
+		User user = userRepository.findByEmail(email)
+			.orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+		return UserInfoResponse.builder()
+			.email(user.getEmail())
+			.username(user.getDisplayName()) // 실제 username 필드 반환
 			.build();
 	}
 }

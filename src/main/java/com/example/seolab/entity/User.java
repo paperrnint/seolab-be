@@ -73,7 +73,12 @@ public class User implements UserDetails {
 
 	@Override
 	public String getUsername() {
-		return email; // 이메일을 username으로 사용
+		return email; // Spring Security를 위해 이메일을 username으로 사용
+	}
+
+	// 실제 사용자명을 반환하는 메서드 추가
+	public String getDisplayName() {
+		return username;
 	}
 
 	@Override
