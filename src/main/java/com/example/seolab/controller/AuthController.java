@@ -5,6 +5,7 @@ import com.example.seolab.dto.request.SignUpRequest;
 import com.example.seolab.dto.response.LoginResponse;
 import com.example.seolab.dto.response.SignUpResponse;
 import com.example.seolab.dto.response.TokenResponse;
+import com.example.seolab.dto.response.UserInfoResponse;
 import com.example.seolab.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -62,5 +64,11 @@ public class AuthController {
 	public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
 		SignUpResponse signUpResponse = authService.signUp(signUpRequest);
 		return ResponseEntity.status(HttpStatus.CREATED).body(signUpResponse);
+	}
+
+	@GetMapping("/me")
+	public ResponseEntity<UserInfoResponse> getCurrentUser(Authentication authentication) {
+		UserInfoResponse userInfo = authService.getCurrentUser(authentication);
+		return ResponseEntity.ok(userInfo);
 	}
 }
