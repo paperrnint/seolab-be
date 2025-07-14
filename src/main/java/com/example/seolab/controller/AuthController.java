@@ -55,8 +55,9 @@ public class AuthController {
 	}
 
 	@PostMapping("/logout")
-	public ResponseEntity<Void> logout(HttpServletResponse response) {
-		authService.logout(response);
+	public ResponseEntity<Void> logout(HttpServletResponse response, Authentication authentication) {
+		// authentication이 null이면 Spring Security가 자동으로 401 반환
+		authService.logout(response, authentication);
 		return ResponseEntity.ok().build();
 	}
 
