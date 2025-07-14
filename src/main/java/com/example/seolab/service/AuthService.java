@@ -12,6 +12,7 @@ import com.example.seolab.security.JwtUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class AuthService {
 
 	private final UserRepository userRepository;
@@ -55,6 +57,8 @@ public class AuthService {
 		refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
 		response.addCookie(refreshTokenCookie);
 
+		log.info("User {} logged in successfully", user.getEmail());
+
 		return LoginResponse.builder()
 			.accessToken(accessToken)
 			.email(user.getEmail())
@@ -78,19 +82,27 @@ public class AuthService {
 		// 새로운 Access Token 생성
 		String newAccessToken = jwtUtil.generateAccessToken(user);
 
+		log.info("Access token refreshed for user {}", email);
+
 		return TokenResponse.builder()
 			.accessToken(newAccessToken)
 			.build();
 	}
 
-	public void logout(HttpServletResponse response) {
+	public void logout(HttpServletResponse response, Authentication authentication) {
+		String email = authentication.getName(); // 로그아웃하는 사용자 식별
+
+		log.info("User {} is logging out", email);
+
 		// Refresh Token 쿠키 삭제
 		Cookie refreshTokenCookie = new Cookie("refreshToken", null);
 		refreshTokenCookie.setHttpOnly(true);
 		refreshTokenCookie.setSecure(true);
 		refreshTokenCookie.setPath("/");
-		refreshTokenCookie.setMaxAge(0);
+		refreshTokenCookie.setMaxAge(0); // 쿠키 만료시간을 0으로 설정하여 삭제
 		response.addCookie(refreshTokenCookie);
+
+		log.info("User {} logged out successfully", email);
 	}
 
 	public SignUpResponse signUp(SignUpRequest signUpRequest) {
@@ -110,6 +122,8 @@ public class AuthService {
 			.build();
 
 		User savedUser = userRepository.save(user);
+
+		log.info("New user registered: {}", savedUser.getEmail());
 
 		return SignUpResponse.builder()
 			.email(savedUser.getEmail())
