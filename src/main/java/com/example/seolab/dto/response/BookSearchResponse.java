@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,5 +18,7 @@ import java.util.List;
 public class BookSearchResponse {
 	private List<BookDto> books;
 	private int totalCount;
+
+	@JsonProperty("isEnd")
 	private boolean isEnd;
 }

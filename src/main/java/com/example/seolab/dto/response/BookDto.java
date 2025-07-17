@@ -17,14 +17,10 @@ import java.util.List;
 public class BookDto {
 	private String title;
 	private String contents;
-	private String url;
 	private String isbn;
 	private LocalDate publishedDate;
 	private List<String> authors;
 	private String publisher;
 	private List<String> translators;
-	private Integer price;
-	private Integer salePrice;
 	private String thumbnail;
-	private String status;
 }
