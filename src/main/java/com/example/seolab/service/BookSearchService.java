@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.HtmlUtils;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -94,8 +95,8 @@ public class BookSearchService {
 
 	private BookDto convertToBookDto(KakaoBookSearchResponse.Document document) {
 		return BookDto.builder()
-			.title(document.getTitle())
-			.contents(document.getContents())
+			.title(HtmlUtils.htmlUnescape(document.getTitle()))
+			.contents(HtmlUtils.htmlUnescape(document.getContents()))
 			.isbn(document.getIsbn())
 			.publishedDate(parseDate(document.getDatetime()))
 			.authors(document.getAuthors())
