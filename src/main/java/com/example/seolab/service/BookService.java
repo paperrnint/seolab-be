@@ -20,11 +20,6 @@ public class BookService {
 
 	private final BookRepository bookRepository;
 
-	/**
-	 * 책을 찾거나 새로 생성하는 메서드
-	 * @param bookDto 카카오 API에서 받은 책 정보
-	 * @return 기존 책 또는 새로 생성된 책
-	 */
 	public Book findOrCreateBook(BookDto bookDto) {
 		log.info("Finding or creating book: {}", bookDto.getTitle());
 
@@ -62,11 +57,6 @@ public class BookService {
 		return createNewBook(bookDto);
 	}
 
-	/**
-	 * 새로운 책을 생성하는 메서드
-	 * @param bookDto 책 정보
-	 * @return 생성된 책
-	 */
 	private Book createNewBook(BookDto bookDto) {
 		Book book = Book.builder()
 			.title(bookDto.getTitle())
@@ -84,12 +74,6 @@ public class BookService {
 		return savedBook;
 	}
 
-	/**
-	 * ISBN 문자열에서 첫 번째 ISBN을 추출하는 메서드
-	 * 예: "8968488703 9788968488702" → "8968488703"
-	 * @param isbn ISBN 문자열
-	 * @return 첫 번째 ISBN 또는 null
-	 */
 	private String extractFirstIsbn(String isbn) {
 		if (!StringUtils.hasText(isbn)) {
 			return null;
@@ -103,11 +87,6 @@ public class BookService {
 		return trimmedIsbn;
 	}
 
-	/**
-	 * 저자 리스트에서 첫 번째 저자를 가져오는 메서드
-	 * @param bookDto 책 정보
-	 * @return 첫 번째 저자 또는 빈 문자열
-	 */
 	private String getFirstAuthor(BookDto bookDto) {
 		if (bookDto.getAuthors() == null || bookDto.getAuthors().isEmpty()) {
 			return "";
@@ -115,22 +94,12 @@ public class BookService {
 		return bookDto.getAuthors().get(0);
 	}
 
-	/**
-	 * ID로 책 조회
-	 * @param bookId 책 ID
-	 * @return 책 정보
-	 */
 	@Transactional(readOnly = true)
 	public Book findBookById(Long bookId) {
 		return bookRepository.findById(bookId)
 			.orElseThrow(() -> new IllegalArgumentException("책을 찾을 수 없습니다: " + bookId));
 	}
 
-	/**
-	 * ISBN으로 책 조회
-	 * @param isbn ISBN
-	 * @return 책 정보
-	 */
 	@Transactional(readOnly = true)
 	public Optional<Book> findBookByIsbn(String isbn) {
 		String firstIsbn = extractFirstIsbn(isbn);
