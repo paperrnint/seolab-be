@@ -40,9 +40,6 @@ public class UserBook {
 	@JoinColumn(name = "book_id", nullable = false)
 	private Book book;
 
-	@Column(name = "start_date", nullable = false)
-	private LocalDate startDate;
-
 	@Column(name = "end_date")
 	private LocalDate endDate;
 
@@ -65,10 +62,6 @@ public class UserBook {
 	protected void onCreate() {
 		createdAt = LocalDateTime.now();
 		updatedAt = LocalDateTime.now();
-
-		if (startDate == null) {
-			startDate = LocalDate.now();
-		}
 	}
 
 	@PreUpdate
@@ -91,9 +84,20 @@ public class UserBook {
 		}
 	}
 
-	public void markAsCompleted() {
-		this.readingStatus = ReadingStatus.COMPLETED;
-		this.endDate = LocalDate.now();
+	public LocalDate getStartDate() {
+		return createdAt != null ? createdAt.toLocalDate() : null;
+	}
+
+	public void toggleReadingStatus() {
+		if (this.readingStatus == ReadingStatus.READING) {
+			// 읽는중 → 완료
+			this.readingStatus = ReadingStatus.COMPLETED;
+			this.endDate = LocalDate.now();
+		} else {
+			// 완료 → 읽는중
+			this.readingStatus = ReadingStatus.READING;
+			this.endDate = null; // 완독일 제거
+		}
 	}
 
 	public void toggleFavorite() {

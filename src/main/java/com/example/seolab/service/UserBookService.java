@@ -3,6 +3,7 @@ package com.example.seolab.service;
 import com.example.seolab.dto.request.AddBookRequest;
 import com.example.seolab.dto.response.AddBookResponse;
 import com.example.seolab.dto.response.BookDto;
+import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.Book;
 import com.example.seolab.entity.User;
 import com.example.seolab.entity.UserBook;
@@ -32,17 +33,13 @@ public class UserBookService {
 	public AddBookResponse addBookToUserLibrary(Long userId, AddBookRequest request) {
 		log.info("Adding book to user {} library: {}", userId, request.getBookInfo().getTitle());
 
-		// 1. 사용자 조회
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
 
-		// 2. 카카오 API 정보를 BookDto로 변환
 		BookDto bookDto = convertToBookDto(request.getBookInfo());
 
-		// 3. 책을 찾거나 생성
 		Book book = bookService.findOrCreateBook(bookDto);
 
-		// 4. 이미 사용자가 이 책을 추가했는지 확인
 		Optional<UserBook> existingUserBook =
 			userBookRepository.findByUserUserIdAndBookBookId(userId, book.getBookId());
 
@@ -50,14 +47,9 @@ public class UserBookService {
 			throw new IllegalArgumentException("이미 내 서재에 추가된 책입니다.");
 		}
 
-		// 5. UserBook 생성
-		LocalDate startDate = request.getStartDate() != null ?
-			request.getStartDate() : LocalDate.now();
-
 		UserBook userBook = UserBook.builder()
 			.user(user)
 			.book(book)
-			.startDate(startDate)
 			.readingStatus(UserBook.ReadingStatus.READING)
 			.isFavorite(false)
 			.build();
@@ -65,36 +57,48 @@ public class UserBookService {
 		UserBook savedUserBook = userBookRepository.save(userBook);
 		log.info("Successfully added book to user library. UserBook ID: {}", savedUserBook.getUserBookId());
 
-		// 6. Response 생성
 		return buildAddBookResponse(savedUserBook);
 	}
 
 	@Transactional(readOnly = true)
-	public List<UserBook> getReadingBooks(Long userId) {
-		return userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
+	public List<UserBookResponse> getReadingBooks(Long userId) {
+		List<UserBook> userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
 			userId, UserBook.ReadingStatus.READING);
+		return userBooks.stream()
+			.map(this::convertToUserBookResponse)
+			.toList();
 	}
 
 	@Transactional(readOnly = true)
-	public List<UserBook> getFavoriteBooks(Long userId) {
-		return userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
+	public List<UserBookResponse> getFavoriteBooks(Long userId) {
+		List<UserBook> userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
+		return userBooks.stream()
+			.map(this::convertToUserBookResponse)
+			.toList();
 	}
 
-	public UserBook markBookAsCompleted(Long userId, Long userBookId) {
+	public UserBookResponse markBookAsCompleted(Long userId, Long userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
-		userBook.markAsCompleted();
 
-		log.info("User {} completed book: {}", userId, userBook.getBook().getTitle());
-		return userBookRepository.save(userBook);
+		String beforeStatus = userBook.getReadingStatus().getValue();
+		userBook.toggleReadingStatus(); // 기존 완료 처리를 토글로 변경
+		String afterStatus = userBook.getReadingStatus().getValue();
+
+		log.info("User {} toggled reading status for book: {} ({} → {})",
+			userId, userBook.getBook().getTitle(), beforeStatus, afterStatus);
+
+		UserBook savedUserBook = userBookRepository.save(userBook);
+		return convertToUserBookResponse(savedUserBook);
 	}
 
-	public UserBook toggleFavorite(Long userId, Long userBookId) {
+	public UserBookResponse toggleFavorite(Long userId, Long userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 		userBook.toggleFavorite();
 
 		log.info("User {} toggled favorite for book: {} ({})",
 			userId, userBook.getBook().getTitle(), userBook.getIsFavorite());
-		return userBookRepository.save(userBook);
+		UserBook savedUserBook = userBookRepository.save(userBook);
+		return convertToUserBookResponse(savedUserBook);
 	}
 
 	private UserBook findUserBookByIdAndUserId(Long userBookId, Long userId) {
@@ -124,7 +128,6 @@ public class UserBookService {
 		}
 
 		try {
-			// "2016-08-16T00:00:00.000+09:00" 형태에서 날짜 부분만 추출
 			if (dateString.contains("T")) {
 				dateString = dateString.substring(0, 10);
 			}
@@ -157,6 +160,32 @@ public class UserBookService {
 			.isFavorite(userBook.getIsFavorite())
 			.createdAt(userBook.getCreatedAt())
 			.message("책이 성공적으로 추가되었습니다.")
+			.build();
+	}
+
+	private UserBookResponse convertToUserBookResponse(UserBook userBook) {
+		Book book = userBook.getBook();
+
+		UserBookResponse.BookInfo bookInfo = UserBookResponse.BookInfo.builder()
+			.bookId(book.getBookId())
+			.title(book.getTitle())
+			.author(book.getAuthor())
+			.publisher(book.getPublisher())
+			.isbn(book.getIsbn())
+			.description(book.getDescription())
+			.coverImage(book.getCoverImage())
+			.publishedDate(book.getPublishedDate())
+			.build();
+
+		return UserBookResponse.builder()
+			.userBookId(userBook.getUserBookId())
+			.book(bookInfo)
+			.startDate(userBook.getStartDate())
+			.endDate(userBook.getEndDate())
+			.isFavorite(userBook.getIsFavorite())
+			.readingStatus(userBook.getReadingStatus().getValue())
+			.createdAt(userBook.getCreatedAt())
+			.updatedAt(userBook.getUpdatedAt())
 			.build();
 	}
 }

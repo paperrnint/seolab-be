@@ -33,6 +33,4 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 		"ORDER BY ub.updatedAt DESC")
 	List<UserBook> findRecentReadingBooks(@Param("userId") Long userId,
 		@Param("status") ReadingStatus status);
-
-	List<UserBook> findByUserUserIdOrderByStartDateDesc(Long userId);
 }

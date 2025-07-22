@@ -2,8 +2,8 @@ package com.example.seolab.controller;
 
 import com.example.seolab.dto.request.AddBookRequest;
 import com.example.seolab.dto.response.AddBookResponse;
+import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.User;
-import com.example.seolab.entity.UserBook;
 import com.example.seolab.service.UserBookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,39 +40,39 @@ public class BookController {
 	}
 
 	@GetMapping("/reading")
-	public ResponseEntity<List<UserBook>> getReadingBooks(Authentication authentication) {
+	public ResponseEntity<List<UserBookResponse>> getReadingBooks(Authentication authentication) {
 		Long userId = getUserIdFromAuthentication(authentication);
-		List<UserBook> readingBooks = userBookService.getReadingBooks(userId);
+		List<UserBookResponse> readingBooks = userBookService.getReadingBooks(userId);
 
 		return ResponseEntity.ok(readingBooks);
 	}
 
 	@GetMapping("/favorites")
-	public ResponseEntity<List<UserBook>> getFavoriteBooks(Authentication authentication) {
+	public ResponseEntity<List<UserBookResponse>> getFavoriteBooks(Authentication authentication) {
 		Long userId = getUserIdFromAuthentication(authentication);
-		List<UserBook> favoriteBooks = userBookService.getFavoriteBooks(userId);
+		List<UserBookResponse> favoriteBooks = userBookService.getFavoriteBooks(userId);
 
 		return ResponseEntity.ok(favoriteBooks);
 	}
 
 	@PatchMapping("/{userBookId}/complete")
-	public ResponseEntity<UserBook> markBookAsCompleted(
+	public ResponseEntity<UserBookResponse> markBookAsCompleted(
 		@PathVariable Long userBookId,
 		Authentication authentication) {
 
 		Long userId = getUserIdFromAuthentication(authentication);
-		UserBook completedBook = userBookService.markBookAsCompleted(userId, userBookId);
+		UserBookResponse toggledBook = userBookService.markBookAsCompleted(userId, userBookId);
 
-		return ResponseEntity.ok(completedBook);
+		return ResponseEntity.ok(toggledBook);
 	}
 
 	@PatchMapping("/{userBookId}/favorite")
-	public ResponseEntity<UserBook> toggleFavorite(
+	public ResponseEntity<UserBookResponse> toggleFavorite(
 		@PathVariable Long userBookId,
 		Authentication authentication) {
 
 		Long userId = getUserIdFromAuthentication(authentication);
-		UserBook toggledBook = userBookService.toggleFavorite(userId, userBookId);
+		UserBookResponse toggledBook = userBookService.toggleFavorite(userId, userBookId);
 
 		return ResponseEntity.ok(toggledBook);
 	}

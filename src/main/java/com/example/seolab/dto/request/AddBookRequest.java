@@ -14,12 +14,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddBookRequest {
-
 	@NotNull(message = "책 정보는 필수입니다.")
 	@Valid
 	private BookInfo bookInfo;
-
-	private LocalDate startDate;
 
 	@Getter
 	@Setter
@@ -32,7 +29,7 @@ public class AddBookRequest {
 
 		private String contents;
 		private String isbn;
-		private String publishedDate;
+		private String publishedDate; // ISO 형태 문자열
 		private java.util.List<String> authors;
 		private String publisher;
 		private java.util.List<String> translators;
