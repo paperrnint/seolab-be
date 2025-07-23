@@ -32,12 +32,12 @@ public class UserBookService {
 	private final BookService bookService;
 
 	public AddBookResponse addBookToUserLibrary(Long userId, AddBookRequest request) {
-		log.info("Adding book to user {} library: {}", userId, request.getBookInfo().getTitle());
+		log.info("Adding book to user {} library: {}", userId, request.getTitle());
 
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
 
-		BookDto bookDto = convertToBookDto(request.getBookInfo());
+		BookDto bookDto = convertToBookDto(request);
 
 		Book book = bookService.findOrCreateBook(bookDto);
 
@@ -90,7 +90,7 @@ public class UserBookService {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
 		boolean beforeReading = userBook.getIsReading();
-		userBook.toggleReading(); // 읽는 중 ↔ 완독 토글
+		userBook.toggleReading();
 		boolean afterReading = userBook.getIsReading();
 
 		log.info("User {} toggled reading status for book: {} ({} → {})",
@@ -119,18 +119,18 @@ public class UserBookService {
 			.orElseThrow(() -> new IllegalArgumentException("접근할 수 없는 책입니다."));
 	}
 
-	private BookDto convertToBookDto(AddBookRequest.BookInfo bookInfo) {
-		LocalDate publishedDate = parsePublishedDate(bookInfo.getPublishedDate());
+	private BookDto convertToBookDto(AddBookRequest request) {
+		LocalDate publishedDate = parsePublishedDate(request.getPublishedDate());
 
 		return BookDto.builder()
-			.title(bookInfo.getTitle())
-			.contents(bookInfo.getContents())
-			.isbn(bookInfo.getIsbn())
+			.title(request.getTitle())
+			.contents(request.getContents())
+			.isbn(request.getIsbn())
 			.publishedDate(publishedDate)
-			.authors(bookInfo.getAuthors())
-			.publisher(bookInfo.getPublisher())
-			.translators(bookInfo.getTranslators())
-			.thumbnail(bookInfo.getThumbnail())
+			.authors(request.getAuthors())
+			.publisher(request.getPublisher())
+			.translators(request.getTranslators())
+			.thumbnail(request.getThumbnail())
 			.build();
 	}
 
@@ -168,7 +168,7 @@ public class UserBookService {
 			.userBookId(userBook.getUserBookId())
 			.book(bookDetail)
 			.startDate(userBook.getStartDate())
-			.isReading(userBook.getIsReading())  // readingStatus → isReading
+			.isReading(userBook.getIsReading())
 			.isFavorite(userBook.getIsFavorite())
 			.createdAt(userBook.getCreatedAt())
 			.message("책이 성공적으로 추가되었습니다.")
@@ -195,7 +195,7 @@ public class UserBookService {
 			.startDate(userBook.getStartDate())
 			.endDate(userBook.getEndDate())
 			.isFavorite(userBook.getIsFavorite())
-			.isReading(userBook.getIsReading())  // readingStatus → isReading
+			.isReading(userBook.getIsReading())
 			.createdAt(userBook.getCreatedAt())
 			.updatedAt(userBook.getUpdatedAt())
 			.build();

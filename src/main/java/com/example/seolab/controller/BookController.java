@@ -23,13 +23,13 @@ public class BookController {
 
 	private final UserBookService userBookService;
 
-	@PostMapping
+	@PostMapping // "/add" 제거
 	public ResponseEntity<AddBookResponse> addBookToLibrary(
 		@Valid @RequestBody AddBookRequest request,
 		Authentication authentication) {
 
 		String userEmail = authentication.getName();
-		log.info("User {} is adding book: {}", userEmail, request.getBookInfo().getTitle());
+		log.info("User {} is adding book: {}", userEmail, request.getTitle());
 
 		// Authentication에서 실제 사용자 ID 추출
 		Long userId = getUserIdFromAuthentication(authentication);
