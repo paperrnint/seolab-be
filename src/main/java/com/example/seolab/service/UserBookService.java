@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +52,7 @@ public class UserBookService {
 		UserBook userBook = UserBook.builder()
 			.user(user)
 			.book(book)
-			.isReading(true)
+			.isReading(true)  // 기본적으로 읽는 중 상태
 			.isFavorite(false)
 			.build();
 
@@ -86,11 +87,11 @@ public class UserBookService {
 			.toList();
 	}
 
-	public UserBookResponse markBookAsCompleted(Long userId, Long userBookId) {
+	public UserBookResponse markBookAsCompleted(Long userId, UUID userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
 		boolean beforeReading = userBook.getIsReading();
-		userBook.toggleReading();
+		userBook.toggleReading(); // 읽는 중 ↔ 완독 토글
 		boolean afterReading = userBook.getIsReading();
 
 		log.info("User {} toggled reading status for book: {} ({} → {})",
@@ -102,7 +103,7 @@ public class UserBookService {
 		return convertToUserBookResponse(savedUserBook);
 	}
 
-	public UserBookResponse toggleFavorite(Long userId, Long userBookId) {
+	public UserBookResponse toggleFavorite(Long userId, UUID userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 		userBook.toggleFavorite();
 
@@ -113,7 +114,7 @@ public class UserBookService {
 		return convertToUserBookResponse(savedUserBook);
 	}
 
-	private UserBook findUserBookByIdAndUserId(Long userBookId, Long userId) {
+	private UserBook findUserBookByIdAndUserId(UUID userBookId, Long userId) {
 		return userBookRepository.findById(userBookId)
 			.filter(ub -> ub.getUser().getUserId().equals(userId))
 			.orElseThrow(() -> new IllegalArgumentException("접근할 수 없는 책입니다."));

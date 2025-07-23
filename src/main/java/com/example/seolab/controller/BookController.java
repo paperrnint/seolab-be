@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/books")
@@ -23,7 +24,7 @@ public class BookController {
 
 	private final UserBookService userBookService;
 
-	@PostMapping // "/add" 제거
+	@PostMapping
 	public ResponseEntity<AddBookResponse> addBookToLibrary(
 		@Valid @RequestBody AddBookRequest request,
 		Authentication authentication) {
@@ -53,7 +54,7 @@ public class BookController {
 
 	@PatchMapping("/{userBookId}/complete")
 	public ResponseEntity<UserBookResponse> markBookAsCompleted(
-		@PathVariable Long userBookId,
+		@PathVariable UUID userBookId,
 		Authentication authentication) {
 
 		Long userId = getUserIdFromAuthentication(authentication);
@@ -64,7 +65,7 @@ public class BookController {
 
 	@PatchMapping("/{userBookId}/favorite")
 	public ResponseEntity<UserBookResponse> toggleFavorite(
-		@PathVariable Long userBookId,
+		@PathVariable UUID userBookId,
 		Authentication authentication) {
 
 		Long userId = getUserIdFromAuthentication(authentication);

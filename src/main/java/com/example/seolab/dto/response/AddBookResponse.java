@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,7 +18,7 @@ import java.util.List;
 @Builder
 public class AddBookResponse {
 
-	private Long userBookId;
+	private UUID userBookId;
 	private BookDetail book;
 	private LocalDate startDate;
 	private Boolean isReading;

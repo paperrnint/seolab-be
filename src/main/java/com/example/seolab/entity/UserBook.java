@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -28,9 +29,9 @@ import java.time.LocalDateTime;
 public class UserBook {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_book_id")
-	private Long userBookId;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(name = "user_book_id", columnDefinition = "BINARY(16)")
+	private UUID userBookId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
@@ -49,7 +50,7 @@ public class UserBook {
 
 	@Column(name = "is_reading")
 	@Builder.Default
-	private Boolean isReading = true;  // TRUE: 읽는 중, FALSE: 완독
+	private Boolean isReading = true;
 
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
@@ -74,11 +75,9 @@ public class UserBook {
 
 	public void toggleReading() {
 		if (this.isReading) {
-			// 읽는 중 → 완독
 			this.isReading = false;
 			this.endDate = LocalDate.now();
 		} else {
-			// 완독 → 읽는 중
 			this.isReading = true;
 			this.endDate = null; // 완독일 제거
 		}
@@ -88,7 +87,6 @@ public class UserBook {
 		this.isFavorite = !this.isFavorite;
 	}
 
-	// 편의 메소드들
 	public boolean isCurrentlyReading() {
 		return this.isReading;
 	}

@@ -8,9 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserBookRepository extends JpaRepository<UserBook, Long> {
+public interface UserBookRepository extends JpaRepository<UserBook, UUID> {
 
 	Optional<UserBook> findByUserUserIdAndBookBookId(Long userId, Long bookId);
 
@@ -22,7 +23,6 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
 	List<UserBook> findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(Long userId);
 
-	// 즐겨찾기이면서 특정 읽기 상태인 책들
 	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(
 		Long userId, Boolean isReading);
 
