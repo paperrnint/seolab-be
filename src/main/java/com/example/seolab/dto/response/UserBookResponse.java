@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -32,11 +33,12 @@ public class UserBookResponse {
 	public static class BookInfo {
 		private Long bookId;
 		private String title;
-		private String author;
-		private String publisher;
+		private String contents;
 		private String isbn;
-		private String description;
-		private String coverImage;
 		private LocalDate publishedDate;
+		private List<String> authors;
+		private String publisher;
+		private List<String> translators;
+		private String thumbnail;
 	}
 }

@@ -11,18 +11,35 @@ import java.util.Optional;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
 
-
+	// 단순 필드 검색은 기존 JPA 메소드명 방식 유지
 	Optional<Book> findByIsbn(String isbn);
-
-	Optional<Book> findByTitleAndAuthorAndPublisher(String title, String author, String publisher);
-
 	boolean existsByIsbn(String isbn);
 
-	boolean existsByTitleAndAuthorAndPublisher(String title, String author, String publisher);
+	// JSON 배열 검색이 필요한 경우만 native query 사용
+	@Query(value = "SELECT * FROM books WHERE " +
+		"title = :title AND " +
+		"JSON_CONTAINS(authors, JSON_QUOTE(:author)) = 1 AND " +
+		"publisher = :publisher", nativeQuery = true)
+	Optional<Book> findByTitleAndAuthorAndPublisher(
+		@Param("title") String title,
+		@Param("author") String author,
+		@Param("publisher") String publisher
+	);
 
-	@Query("SELECT b FROM Book b WHERE " +
-		"(b.isbn = :isbn AND :isbn IS NOT NULL) OR " +
-		"(b.title = :title AND b.author = :author AND b.publisher = :publisher)")
+	@Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END FROM books WHERE " +
+		"title = :title AND " +
+		"JSON_CONTAINS(authors, JSON_QUOTE(:author)) = 1 AND " +
+		"publisher = :publisher", nativeQuery = true)
+	boolean existsByTitleAndAuthorAndPublisher(
+		@Param("title") String title,
+		@Param("author") String author,
+		@Param("publisher") String publisher
+	);
+
+	@Query(value = "SELECT * FROM books WHERE " +
+		"(isbn = :isbn AND :isbn IS NOT NULL) OR " +
+		"(title = :title AND JSON_CONTAINS(authors, JSON_QUOTE(:author)) = 1 AND publisher = :publisher)",
+		nativeQuery = true)
 	Optional<Book> findByIsbnOrTitleAndAuthorAndPublisher(
 		@Param("isbn") String isbn,
 		@Param("title") String title,

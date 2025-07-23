@@ -51,7 +51,7 @@ public class UserBookService {
 		UserBook userBook = UserBook.builder()
 			.user(user)
 			.book(book)
-			.isReading(true)  // 기본적으로 읽는 중 상태
+			.isReading(true)
 			.isFavorite(false)
 			.build();
 
@@ -156,12 +156,13 @@ public class UserBookService {
 		AddBookResponse.BookDetail bookDetail = AddBookResponse.BookDetail.builder()
 			.bookId(book.getBookId())
 			.title(book.getTitle())
-			.author(book.getAuthor())
-			.publisher(book.getPublisher())
+			.contents(book.getContents())
 			.isbn(book.getIsbn())
-			.description(book.getDescription())
-			.coverImage(book.getCoverImage())
 			.publishedDate(book.getPublishedDate())
+			.authors(book.getAuthors())
+			.publisher(book.getPublisher())
+			.translators(book.getTranslators())
+			.thumbnail(book.getThumbnail())
 			.build();
 
 		return AddBookResponse.builder()
@@ -181,12 +182,13 @@ public class UserBookService {
 		UserBookResponse.BookInfo bookInfo = UserBookResponse.BookInfo.builder()
 			.bookId(book.getBookId())
 			.title(book.getTitle())
-			.author(book.getAuthor())
-			.publisher(book.getPublisher())
+			.contents(book.getContents())
 			.isbn(book.getIsbn())
-			.description(book.getDescription())
-			.coverImage(book.getCoverImage())
 			.publishedDate(book.getPublishedDate())
+			.authors(book.getAuthors())
+			.publisher(book.getPublisher())
+			.translators(book.getTranslators())
+			.thumbnail(book.getThumbnail())
 			.build();
 
 		return UserBookResponse.builder()

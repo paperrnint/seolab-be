@@ -22,7 +22,9 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
 	List<UserBook> findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(Long userId);
 
-	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(Long userId, Boolean isReading);
+	// 즐겨찾기이면서 특정 읽기 상태인 책들
+	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(
+		Long userId, Boolean isReading);
 
 	long countByUserUserIdAndIsReading(Long userId, Boolean isReading);
 

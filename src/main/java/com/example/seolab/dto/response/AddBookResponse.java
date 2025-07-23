@@ -20,8 +20,8 @@ public class AddBookResponse {
 	private Long userBookId;
 	private BookDetail book;
 	private LocalDate startDate;
-	private Boolean isFavorite;
 	private Boolean isReading;
+	private Boolean isFavorite;
 	private LocalDateTime createdAt;
 	private String message;
 
@@ -33,11 +33,12 @@ public class AddBookResponse {
 	public static class BookDetail {
 		private Long bookId;
 		private String title;
-		private String author;
-		private String publisher;
+		private String contents;
 		private String isbn;
-		private String description;
-		private String coverImage;
 		private LocalDate publishedDate;
+		private List<String> authors;
+		private String publisher;
+		private List<String> translators;
+		private String thumbnail;
 	}
 }
