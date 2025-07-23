@@ -23,7 +23,7 @@ public class BookController {
 
 	private final UserBookService userBookService;
 
-	@PostMapping("/add")
+	@PostMapping
 	public ResponseEntity<AddBookResponse> addBookToLibrary(
 		@Valid @RequestBody AddBookRequest request,
 		Authentication authentication) {

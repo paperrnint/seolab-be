@@ -7,6 +7,7 @@ import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.Book;
 import com.example.seolab.entity.User;
 import com.example.seolab.entity.UserBook;
+import com.example.seolab.exception.DuplicateBookException;
 import com.example.seolab.repository.UserBookRepository;
 import com.example.seolab.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class UserBookService {
 			userBookRepository.findByUserUserIdAndBookBookId(userId, book.getBookId());
 
 		if (existingUserBook.isPresent()) {
-			throw new IllegalArgumentException("이미 내 서재에 추가된 책입니다.");
+			throw new DuplicateBookException("이미 내 서재에 추가된 책입니다.");
 		}
 
 		UserBook userBook = UserBook.builder()
