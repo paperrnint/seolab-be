@@ -39,20 +39,16 @@ public class BookController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
-	@GetMapping("/reading")
-	public ResponseEntity<List<UserBookResponse>> getReadingBooks(Authentication authentication) {
+	@GetMapping
+	public ResponseEntity<List<UserBookResponse>> getUserBooks(
+		@RequestParam(required = false) Boolean favorite,
+		@RequestParam(required = false) Boolean reading,
+		Authentication authentication) {
+
 		Long userId = getUserIdFromAuthentication(authentication);
-		List<UserBookResponse> readingBooks = userBookService.getReadingBooks(userId);
+		List<UserBookResponse> books = userBookService.getUserBooks(userId, favorite, reading);
 
-		return ResponseEntity.ok(readingBooks);
-	}
-
-	@GetMapping("/favorites")
-	public ResponseEntity<List<UserBookResponse>> getFavoriteBooks(Authentication authentication) {
-		Long userId = getUserIdFromAuthentication(authentication);
-		List<UserBookResponse> favoriteBooks = userBookService.getFavoriteBooks(userId);
-
-		return ResponseEntity.ok(favoriteBooks);
+		return ResponseEntity.ok(books);
 	}
 
 	@PatchMapping("/{userBookId}/complete")

@@ -62,17 +62,30 @@ public class UserBookService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<UserBookResponse> getReadingBooks(Long userId) {
-		List<UserBook> userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
-			userId, UserBook.ReadingStatus.READING);
-		return userBooks.stream()
-			.map(this::convertToUserBookResponse)
-			.toList();
-	}
+	public List<UserBookResponse> getUserBooks(Long userId, Boolean favorite, Boolean reading) {
+		List<UserBook> userBooks;
 
-	@Transactional(readOnly = true)
-	public List<UserBookResponse> getFavoriteBooks(Long userId) {
-		List<UserBook> userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
+		// 쿼리 파라미터에 따른 조건부 조회
+		if (favorite != null && favorite && reading != null && reading) {
+			// favorite=true&reading=true: 즐겨찾기이면서 읽는 중인 책
+			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueAndReadingStatusOrderByCreatedAtDesc(
+				userId, UserBook.ReadingStatus.READING);
+		} else if (favorite != null && favorite) {
+			// favorite=true: 즐겨찾기 책만
+			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
+		} else if (reading != null && reading) {
+			// reading=true: 읽는 중인 책만
+			userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
+				userId, UserBook.ReadingStatus.READING);
+		} else if (reading != null && !reading) {
+			// reading=false: 완료된 책만
+			userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
+				userId, UserBook.ReadingStatus.COMPLETED);
+		} else {
+			// 파라미터 없음: 전체 책 목록
+			userBooks = userBookRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
+		}
+
 		return userBooks.stream()
 			.map(this::convertToUserBookResponse)
 			.toList();

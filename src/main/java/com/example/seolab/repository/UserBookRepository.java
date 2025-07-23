@@ -23,6 +23,8 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
 	List<UserBook> findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(Long userId);
 
+	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndReadingStatusOrderByCreatedAtDesc(Long userId, ReadingStatus readingStatus);
+
 	long countByUserUserIdAndReadingStatus(Long userId, ReadingStatus readingStatus);
 
 	Optional<UserBook> findTopByUserUserIdOrderByCreatedAtDesc(Long userId);
