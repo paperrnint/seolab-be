@@ -20,8 +20,8 @@ public class AddBookResponse {
 	private Long userBookId;
 	private BookDetail book;
 	private LocalDate startDate;
-	private String readingStatus;
 	private Boolean isFavorite;
+	private Boolean isReading;
 	private LocalDateTime createdAt;
 	private String message;
 

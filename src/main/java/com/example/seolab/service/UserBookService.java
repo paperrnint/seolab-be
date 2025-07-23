@@ -51,7 +51,7 @@ public class UserBookService {
 		UserBook userBook = UserBook.builder()
 			.user(user)
 			.book(book)
-			.readingStatus(UserBook.ReadingStatus.READING)
+			.isReading(true)  // 기본적으로 읽는 중 상태
 			.isFavorite(false)
 			.build();
 
@@ -66,21 +66,16 @@ public class UserBookService {
 		List<UserBook> userBooks;
 
 		// 쿼리 파라미터에 따른 조건부 조회
-		if (favorite != null && favorite && reading != null && reading) {
-			// favorite=true&reading=true: 즐겨찾기이면서 읽는 중인 책
-			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueAndReadingStatusOrderByCreatedAtDesc(
-				userId, UserBook.ReadingStatus.READING);
+		if (favorite != null && favorite && reading != null) {
+			// favorite=true&reading=true/false: 즐겨찾기이면서 읽는 중/완독인 책
+			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(
+				userId, reading);
 		} else if (favorite != null && favorite) {
 			// favorite=true: 즐겨찾기 책만
 			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
-		} else if (reading != null && reading) {
-			// reading=true: 읽는 중인 책만
-			userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
-				userId, UserBook.ReadingStatus.READING);
-		} else if (reading != null && !reading) {
-			// reading=false: 완료된 책만
-			userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
-				userId, UserBook.ReadingStatus.COMPLETED);
+		} else if (reading != null) {
+			// reading=true/false: 읽는 중/완독인 책만
+			userBooks = userBookRepository.findByUserUserIdAndIsReadingOrderByCreatedAtDesc(userId, reading);
 		} else {
 			// 파라미터 없음: 전체 책 목록
 			userBooks = userBookRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
@@ -94,12 +89,14 @@ public class UserBookService {
 	public UserBookResponse markBookAsCompleted(Long userId, Long userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
-		String beforeStatus = userBook.getReadingStatus().getValue();
-		userBook.toggleReadingStatus(); // 기존 완료 처리를 토글로 변경
-		String afterStatus = userBook.getReadingStatus().getValue();
+		boolean beforeReading = userBook.getIsReading();
+		userBook.toggleReading(); // 읽는 중 ↔ 완독 토글
+		boolean afterReading = userBook.getIsReading();
 
 		log.info("User {} toggled reading status for book: {} ({} → {})",
-			userId, userBook.getBook().getTitle(), beforeStatus, afterStatus);
+			userId, userBook.getBook().getTitle(),
+			beforeReading ? "reading" : "completed",
+			afterReading ? "reading" : "completed");
 
 		UserBook savedUserBook = userBookRepository.save(userBook);
 		return convertToUserBookResponse(savedUserBook);
@@ -111,6 +108,7 @@ public class UserBookService {
 
 		log.info("User {} toggled favorite for book: {} ({})",
 			userId, userBook.getBook().getTitle(), userBook.getIsFavorite());
+
 		UserBook savedUserBook = userBookRepository.save(userBook);
 		return convertToUserBookResponse(savedUserBook);
 	}
@@ -170,7 +168,7 @@ public class UserBookService {
 			.userBookId(userBook.getUserBookId())
 			.book(bookDetail)
 			.startDate(userBook.getStartDate())
-			.readingStatus(userBook.getReadingStatus().getValue())
+			.isReading(userBook.getIsReading())  // readingStatus → isReading
 			.isFavorite(userBook.getIsFavorite())
 			.createdAt(userBook.getCreatedAt())
 			.message("책이 성공적으로 추가되었습니다.")
@@ -197,7 +195,7 @@ public class UserBookService {
 			.startDate(userBook.getStartDate())
 			.endDate(userBook.getEndDate())
 			.isFavorite(userBook.getIsFavorite())
-			.readingStatus(userBook.getReadingStatus().getValue())
+			.isReading(userBook.getIsReading())  // readingStatus → isReading
 			.createdAt(userBook.getCreatedAt())
 			.updatedAt(userBook.getUpdatedAt())
 			.build();

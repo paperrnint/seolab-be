@@ -20,7 +20,7 @@ public class UserBookResponse {
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private Boolean isFavorite;
-	private String readingStatus;
+	private Boolean isReading;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 

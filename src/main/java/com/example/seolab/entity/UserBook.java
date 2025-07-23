@@ -47,10 +47,9 @@ public class UserBook {
 	@Builder.Default
 	private Boolean isFavorite = false;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "reading_status")
+	@Column(name = "is_reading")
 	@Builder.Default
-	private ReadingStatus readingStatus = ReadingStatus.READING;
+	private Boolean isReading = true;  // TRUE: 읽는 중, FALSE: 완독
 
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
@@ -69,33 +68,18 @@ public class UserBook {
 		updatedAt = LocalDateTime.now();
 	}
 
-	public enum ReadingStatus {
-		READING("reading"),
-		COMPLETED("completed");
-
-		private final String value;
-
-		ReadingStatus(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return value;
-		}
-	}
-
 	public LocalDate getStartDate() {
 		return createdAt != null ? createdAt.toLocalDate() : null;
 	}
 
-	public void toggleReadingStatus() {
-		if (this.readingStatus == ReadingStatus.READING) {
-			// 읽는중 → 완료
-			this.readingStatus = ReadingStatus.COMPLETED;
+	public void toggleReading() {
+		if (this.isReading) {
+			// 읽는 중 → 완독
+			this.isReading = false;
 			this.endDate = LocalDate.now();
 		} else {
-			// 완료 → 읽는중
-			this.readingStatus = ReadingStatus.READING;
+			// 완독 → 읽는 중
+			this.isReading = true;
 			this.endDate = null; // 완독일 제거
 		}
 	}
@@ -104,11 +88,12 @@ public class UserBook {
 		this.isFavorite = !this.isFavorite;
 	}
 
-	public boolean isReading() {
-		return this.readingStatus == ReadingStatus.READING;
+	// 편의 메소드들
+	public boolean isCurrentlyReading() {
+		return this.isReading;
 	}
 
 	public boolean isCompleted() {
-		return this.readingStatus == ReadingStatus.COMPLETED;
+		return !this.isReading;
 	}
 }
