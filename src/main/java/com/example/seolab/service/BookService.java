@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -60,12 +60,13 @@ public class BookService {
 	private Book createNewBook(BookDto bookDto) {
 		Book book = Book.builder()
 			.title(bookDto.getTitle())
-			.author(getFirstAuthor(bookDto))
+			.authors(bookDto.getAuthors() != null ? bookDto.getAuthors() : List.of())  // JSON 배열
 			.publisher(bookDto.getPublisher())
 			.isbn(extractFirstIsbn(bookDto.getIsbn()))
-			.description(bookDto.getContents())
-			.coverImage(bookDto.getThumbnail())
+			.contents(bookDto.getContents())
+			.thumbnail(bookDto.getThumbnail())
 			.publishedDate(bookDto.getPublishedDate())
+			.translators(bookDto.getTranslators() != null ? bookDto.getTranslators() : List.of())  // JSON 배열
 			.build();
 
 		Book savedBook = bookRepository.save(book);

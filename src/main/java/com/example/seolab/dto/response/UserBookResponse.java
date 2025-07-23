@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -15,12 +17,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class UserBookResponse {
-	private Long userBookId;
+	private UUID userBookId;
 	private BookInfo book;
 	private LocalDate startDate;
 	private LocalDate endDate;
 	private Boolean isFavorite;
-	private String readingStatus;
+	private Boolean isReading;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
@@ -32,11 +34,12 @@ public class UserBookResponse {
 	public static class BookInfo {
 		private Long bookId;
 		private String title;
-		private String author;
-		private String publisher;
+		private String contents;
 		private String isbn;
-		private String description;
-		private String coverImage;
 		private LocalDate publishedDate;
+		private List<String> authors;
+		private String publisher;
+		private List<String> translators;
+		private String thumbnail;
 	}
 }

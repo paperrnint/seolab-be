@@ -7,6 +7,7 @@ import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.Book;
 import com.example.seolab.entity.User;
 import com.example.seolab.entity.UserBook;
+import com.example.seolab.exception.DuplicateBookException;
 import com.example.seolab.repository.UserBookRepository;
 import com.example.seolab.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -31,12 +33,12 @@ public class UserBookService {
 	private final BookService bookService;
 
 	public AddBookResponse addBookToUserLibrary(Long userId, AddBookRequest request) {
-		log.info("Adding book to user {} library: {}", userId, request.getBookInfo().getTitle());
+		log.info("Adding book to user {} library: {}", userId, request.getTitle());
 
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
 
-		BookDto bookDto = convertToBookDto(request.getBookInfo());
+		BookDto bookDto = convertToBookDto(request);
 
 		Book book = bookService.findOrCreateBook(bookDto);
 
@@ -44,13 +46,13 @@ public class UserBookService {
 			userBookRepository.findByUserUserIdAndBookBookId(userId, book.getBookId());
 
 		if (existingUserBook.isPresent()) {
-			throw new IllegalArgumentException("이미 내 서재에 추가된 책입니다.");
+			throw new DuplicateBookException("이미 내 서재에 추가된 책입니다.");
 		}
 
 		UserBook userBook = UserBook.builder()
 			.user(user)
 			.book(book)
-			.readingStatus(UserBook.ReadingStatus.READING)
+			.isReading(true)  // 기본적으로 읽는 중 상태
 			.isFavorite(false)
 			.build();
 
@@ -61,64 +63,75 @@ public class UserBookService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<UserBookResponse> getReadingBooks(Long userId) {
-		List<UserBook> userBooks = userBookRepository.findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(
-			userId, UserBook.ReadingStatus.READING);
+	public List<UserBookResponse> getUserBooks(Long userId, Boolean favorite, Boolean reading) {
+		List<UserBook> userBooks;
+
+		// 쿼리 파라미터에 따른 조건부 조회
+		if (favorite != null && favorite && reading != null) {
+			// favorite=true&reading=true/false: 즐겨찾기이면서 읽는 중/완독인 책
+			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(
+				userId, reading);
+		} else if (favorite != null && favorite) {
+			// favorite=true: 즐겨찾기 책만
+			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
+		} else if (reading != null) {
+			// reading=true/false: 읽는 중/완독인 책만
+			userBooks = userBookRepository.findByUserUserIdAndIsReadingOrderByCreatedAtDesc(userId, reading);
+		} else {
+			// 파라미터 없음: 전체 책 목록
+			userBooks = userBookRepository.findByUserUserIdOrderByCreatedAtDesc(userId);
+		}
+
 		return userBooks.stream()
 			.map(this::convertToUserBookResponse)
 			.toList();
 	}
 
-	@Transactional(readOnly = true)
-	public List<UserBookResponse> getFavoriteBooks(Long userId) {
-		List<UserBook> userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(userId);
-		return userBooks.stream()
-			.map(this::convertToUserBookResponse)
-			.toList();
-	}
-
-	public UserBookResponse markBookAsCompleted(Long userId, Long userBookId) {
+	public UserBookResponse markBookAsCompleted(Long userId, UUID userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
-		String beforeStatus = userBook.getReadingStatus().getValue();
-		userBook.toggleReadingStatus(); // 기존 완료 처리를 토글로 변경
-		String afterStatus = userBook.getReadingStatus().getValue();
+		boolean beforeReading = userBook.getIsReading();
+		userBook.toggleReading(); // 읽는 중 ↔ 완독 토글
+		boolean afterReading = userBook.getIsReading();
 
 		log.info("User {} toggled reading status for book: {} ({} → {})",
-			userId, userBook.getBook().getTitle(), beforeStatus, afterStatus);
+			userId, userBook.getBook().getTitle(),
+			beforeReading ? "reading" : "completed",
+			afterReading ? "reading" : "completed");
 
 		UserBook savedUserBook = userBookRepository.save(userBook);
 		return convertToUserBookResponse(savedUserBook);
 	}
 
-	public UserBookResponse toggleFavorite(Long userId, Long userBookId) {
+	public UserBookResponse toggleFavorite(Long userId, UUID userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 		userBook.toggleFavorite();
 
 		log.info("User {} toggled favorite for book: {} ({})",
 			userId, userBook.getBook().getTitle(), userBook.getIsFavorite());
+
 		UserBook savedUserBook = userBookRepository.save(userBook);
 		return convertToUserBookResponse(savedUserBook);
 	}
 
-	private UserBook findUserBookByIdAndUserId(Long userBookId, Long userId) {
+	private UserBook findUserBookByIdAndUserId(UUID userBookId, Long userId) {
 		return userBookRepository.findById(userBookId)
 			.filter(ub -> ub.getUser().getUserId().equals(userId))
 			.orElseThrow(() -> new IllegalArgumentException("접근할 수 없는 책입니다."));
 	}
 
-	private BookDto convertToBookDto(AddBookRequest.BookInfo bookInfo) {
-		LocalDate publishedDate = parsePublishedDate(bookInfo.getPublishedDate());
+	private BookDto convertToBookDto(AddBookRequest request) {
+		LocalDate publishedDate = parsePublishedDate(request.getPublishedDate());
 
 		return BookDto.builder()
-			.title(bookInfo.getTitle())
-			.contents(bookInfo.getContents())
-			.isbn(bookInfo.getIsbn())
+			.title(request.getTitle())
+			.contents(request.getContents())
+			.isbn(request.getIsbn())
 			.publishedDate(publishedDate)
-			.authors(bookInfo.getAuthors())
-			.publisher(bookInfo.getPublisher())
-			.translators(bookInfo.getTranslators())
-			.thumbnail(bookInfo.getThumbnail())
+			.authors(request.getAuthors())
+			.publisher(request.getPublisher())
+			.translators(request.getTranslators())
+			.thumbnail(request.getThumbnail())
 			.build();
 	}
 
@@ -144,19 +157,20 @@ public class UserBookService {
 		AddBookResponse.BookDetail bookDetail = AddBookResponse.BookDetail.builder()
 			.bookId(book.getBookId())
 			.title(book.getTitle())
-			.author(book.getAuthor())
-			.publisher(book.getPublisher())
+			.contents(book.getContents())
 			.isbn(book.getIsbn())
-			.description(book.getDescription())
-			.coverImage(book.getCoverImage())
 			.publishedDate(book.getPublishedDate())
+			.authors(book.getAuthors())
+			.publisher(book.getPublisher())
+			.translators(book.getTranslators())
+			.thumbnail(book.getThumbnail())
 			.build();
 
 		return AddBookResponse.builder()
 			.userBookId(userBook.getUserBookId())
 			.book(bookDetail)
 			.startDate(userBook.getStartDate())
-			.readingStatus(userBook.getReadingStatus().getValue())
+			.isReading(userBook.getIsReading())
 			.isFavorite(userBook.getIsFavorite())
 			.createdAt(userBook.getCreatedAt())
 			.message("책이 성공적으로 추가되었습니다.")
@@ -169,12 +183,13 @@ public class UserBookService {
 		UserBookResponse.BookInfo bookInfo = UserBookResponse.BookInfo.builder()
 			.bookId(book.getBookId())
 			.title(book.getTitle())
-			.author(book.getAuthor())
-			.publisher(book.getPublisher())
+			.contents(book.getContents())
 			.isbn(book.getIsbn())
-			.description(book.getDescription())
-			.coverImage(book.getCoverImage())
 			.publishedDate(book.getPublishedDate())
+			.authors(book.getAuthors())
+			.publisher(book.getPublisher())
+			.translators(book.getTranslators())
+			.thumbnail(book.getThumbnail())
 			.build();
 
 		return UserBookResponse.builder()
@@ -183,7 +198,7 @@ public class UserBookService {
 			.startDate(userBook.getStartDate())
 			.endDate(userBook.getEndDate())
 			.isFavorite(userBook.getIsFavorite())
-			.readingStatus(userBook.getReadingStatus().getValue())
+			.isReading(userBook.getIsReading())
 			.createdAt(userBook.getCreatedAt())
 			.updatedAt(userBook.getUpdatedAt())
 			.build();

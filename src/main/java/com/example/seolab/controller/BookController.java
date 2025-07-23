@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/books")
@@ -23,13 +24,13 @@ public class BookController {
 
 	private final UserBookService userBookService;
 
-	@PostMapping("/add")
+	@PostMapping
 	public ResponseEntity<AddBookResponse> addBookToLibrary(
 		@Valid @RequestBody AddBookRequest request,
 		Authentication authentication) {
 
 		String userEmail = authentication.getName();
-		log.info("User {} is adding book: {}", userEmail, request.getBookInfo().getTitle());
+		log.info("User {} is adding book: {}", userEmail, request.getTitle());
 
 		// Authentication에서 실제 사용자 ID 추출
 		Long userId = getUserIdFromAuthentication(authentication);
@@ -39,25 +40,21 @@ public class BookController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	}
 
-	@GetMapping("/reading")
-	public ResponseEntity<List<UserBookResponse>> getReadingBooks(Authentication authentication) {
+	@GetMapping
+	public ResponseEntity<List<UserBookResponse>> getUserBooks(
+		@RequestParam(required = false) Boolean favorite,
+		@RequestParam(required = false) Boolean reading,
+		Authentication authentication) {
+
 		Long userId = getUserIdFromAuthentication(authentication);
-		List<UserBookResponse> readingBooks = userBookService.getReadingBooks(userId);
+		List<UserBookResponse> books = userBookService.getUserBooks(userId, favorite, reading);
 
-		return ResponseEntity.ok(readingBooks);
-	}
-
-	@GetMapping("/favorites")
-	public ResponseEntity<List<UserBookResponse>> getFavoriteBooks(Authentication authentication) {
-		Long userId = getUserIdFromAuthentication(authentication);
-		List<UserBookResponse> favoriteBooks = userBookService.getFavoriteBooks(userId);
-
-		return ResponseEntity.ok(favoriteBooks);
+		return ResponseEntity.ok(books);
 	}
 
 	@PatchMapping("/{userBookId}/complete")
 	public ResponseEntity<UserBookResponse> markBookAsCompleted(
-		@PathVariable Long userBookId,
+		@PathVariable UUID userBookId,
 		Authentication authentication) {
 
 		Long userId = getUserIdFromAuthentication(authentication);
@@ -68,7 +65,7 @@ public class BookController {
 
 	@PatchMapping("/{userBookId}/favorite")
 	public ResponseEntity<UserBookResponse> toggleFavorite(
-		@PathVariable Long userBookId,
+		@PathVariable UUID userBookId,
 		Authentication authentication) {
 
 		Long userId = getUserIdFromAuthentication(authentication);

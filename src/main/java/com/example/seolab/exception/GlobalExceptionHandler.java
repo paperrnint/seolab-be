@@ -54,6 +54,14 @@ public class GlobalExceptionHandler {
 		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
 	}
 
+	@ExceptionHandler(DuplicateBookException.class)
+	public ResponseEntity<Map<String, String>> handleDuplicateBookException(
+		DuplicateBookException ex) {
+		Map<String, String> error = new HashMap<>();
+		error.put("message", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+	}
+
 	// 이메일 중복 오류를 409 Conflict로 처리
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<Map<String, String>> handleIllegalArgumentException(

@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -17,10 +18,10 @@ import java.util.List;
 @Builder
 public class AddBookResponse {
 
-	private Long userBookId;
+	private UUID userBookId;
 	private BookDetail book;
 	private LocalDate startDate;
-	private String readingStatus;
+	private Boolean isReading;
 	private Boolean isFavorite;
 	private LocalDateTime createdAt;
 	private String message;
@@ -33,11 +34,12 @@ public class AddBookResponse {
 	public static class BookDetail {
 		private Long bookId;
 		private String title;
-		private String author;
-		private String publisher;
+		private String contents;
 		private String isbn;
-		private String description;
-		private String coverImage;
 		private LocalDate publishedDate;
+		private List<String> authors;
+		private String publisher;
+		private List<String> translators;
+		private String thumbnail;
 	}
 }

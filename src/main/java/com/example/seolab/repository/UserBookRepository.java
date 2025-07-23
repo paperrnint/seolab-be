@@ -1,7 +1,6 @@
 package com.example.seolab.repository;
 
 import com.example.seolab.entity.UserBook;
-import com.example.seolab.entity.UserBook.ReadingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,9 +8,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface UserBookRepository extends JpaRepository<UserBook, Long> {
+public interface UserBookRepository extends JpaRepository<UserBook, UUID> {
 
 	Optional<UserBook> findByUserUserIdAndBookBookId(Long userId, Long bookId);
 
@@ -19,18 +19,21 @@ public interface UserBookRepository extends JpaRepository<UserBook, Long> {
 
 	List<UserBook> findByUserUserIdOrderByCreatedAtDesc(Long userId);
 
-	List<UserBook> findByUserUserIdAndReadingStatusOrderByCreatedAtDesc(Long userId, ReadingStatus readingStatus);
+	List<UserBook> findByUserUserIdAndIsReadingOrderByCreatedAtDesc(Long userId, Boolean isReading);
 
 	List<UserBook> findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(Long userId);
 
-	long countByUserUserIdAndReadingStatus(Long userId, ReadingStatus readingStatus);
+	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(
+		Long userId, Boolean isReading);
+
+	long countByUserUserIdAndIsReading(Long userId, Boolean isReading);
 
 	Optional<UserBook> findTopByUserUserIdOrderByCreatedAtDesc(Long userId);
 
 	@Query("SELECT ub FROM UserBook ub " +
 		"WHERE ub.user.userId = :userId " +
-		"AND ub.readingStatus = :status " +
+		"AND ub.isReading = :isReading " +
 		"ORDER BY ub.updatedAt DESC")
-	List<UserBook> findRecentReadingBooks(@Param("userId") Long userId,
-		@Param("status") ReadingStatus status);
+	List<UserBook> findRecentBooks(@Param("userId") Long userId,
+		@Param("isReading") Boolean isReading);
 }

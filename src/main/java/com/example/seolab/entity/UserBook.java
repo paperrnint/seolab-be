@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -28,9 +29,9 @@ import java.time.LocalDateTime;
 public class UserBook {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "user_book_id")
-	private Long userBookId;
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(name = "user_book_id", columnDefinition = "BINARY(16)")
+	private UUID userBookId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
@@ -47,10 +48,9 @@ public class UserBook {
 	@Builder.Default
 	private Boolean isFavorite = false;
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "reading_status")
+	@Column(name = "is_reading")
 	@Builder.Default
-	private ReadingStatus readingStatus = ReadingStatus.READING;
+	private Boolean isReading = true;
 
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
@@ -69,33 +69,16 @@ public class UserBook {
 		updatedAt = LocalDateTime.now();
 	}
 
-	public enum ReadingStatus {
-		READING("reading"),
-		COMPLETED("completed");
-
-		private final String value;
-
-		ReadingStatus(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return value;
-		}
-	}
-
 	public LocalDate getStartDate() {
 		return createdAt != null ? createdAt.toLocalDate() : null;
 	}
 
-	public void toggleReadingStatus() {
-		if (this.readingStatus == ReadingStatus.READING) {
-			// 읽는중 → 완료
-			this.readingStatus = ReadingStatus.COMPLETED;
+	public void toggleReading() {
+		if (this.isReading) {
+			this.isReading = false;
 			this.endDate = LocalDate.now();
 		} else {
-			// 완료 → 읽는중
-			this.readingStatus = ReadingStatus.READING;
+			this.isReading = true;
 			this.endDate = null; // 완독일 제거
 		}
 	}
@@ -104,11 +87,11 @@ public class UserBook {
 		this.isFavorite = !this.isFavorite;
 	}
 
-	public boolean isReading() {
-		return this.readingStatus == ReadingStatus.READING;
+	public boolean isCurrentlyReading() {
+		return this.isReading;
 	}
 
 	public boolean isCompleted() {
-		return this.readingStatus == ReadingStatus.COMPLETED;
+		return !this.isReading;
 	}
 }
