@@ -54,14 +54,17 @@ public class UserBookService {
 		UserBook userBook = UserBook.builder()
 			.user(user)
 			.book(book)
-			.isReading(true)  // 기본적으로 읽는 중 상태
+			.isReading(true)
 			.isFavorite(false)
 			.build();
 
 		UserBook savedUserBook = userBookRepository.save(userBook);
 		log.info("Successfully added book to user library. UserBook ID: {}", savedUserBook.getUserBookId());
 
-		return buildAddBookResponse(savedUserBook);
+		return AddBookResponse.builder()
+			.userBookId(savedUserBook.getUserBookId())
+			.message("책이 성공적으로 추가되었습니다.")
+			.build();
 	}
 
 	@Transactional(readOnly = true)
@@ -157,30 +160,6 @@ public class UserBookService {
 			log.warn("Failed to parse published date: {}", dateString);
 			return null;
 		}
-	}
-
-	private AddBookResponse buildAddBookResponse(UserBook userBook) {
-		Book book = userBook.getBook();
-
-		AddBookResponse.BookDetail bookDetail = AddBookResponse.BookDetail.builder()
-			.title(book.getTitle())
-			.isbn(book.getIsbn())
-			.publishedDate(book.getPublishedDate())
-			.authors(book.getAuthors())
-			.publisher(book.getPublisher())
-			.translators(book.getTranslators())
-			.thumbnail(book.getThumbnail())
-			.build();
-
-		return AddBookResponse.builder()
-			.userBookId(userBook.getUserBookId())
-			.book(bookDetail)
-			.startDate(userBook.getStartDate())
-			.isReading(userBook.getIsReading())
-			.isFavorite(userBook.getIsFavorite())
-			.createdAt(userBook.getCreatedAt())
-			.message("책이 성공적으로 추가되었습니다.")
-			.build();
 	}
 
 	private UserBookResponse convertToUserBookResponse(UserBook userBook) {
