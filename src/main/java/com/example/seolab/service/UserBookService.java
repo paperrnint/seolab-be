@@ -89,6 +89,12 @@ public class UserBookService {
 			.toList();
 	}
 
+	@Transactional(readOnly = true)
+	public UserBookResponse getUserBook(Long userId, UUID userBookId) {
+		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
+		return convertToUserBookResponse(userBook);
+	}
+
 	public UserBookResponse markBookAsCompleted(Long userId, UUID userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
