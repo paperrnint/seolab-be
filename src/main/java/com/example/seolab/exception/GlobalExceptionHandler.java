@@ -55,10 +55,11 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(DuplicateBookException.class)
-	public ResponseEntity<Map<String, String>> handleDuplicateBookException(
+	public ResponseEntity<Map<String, Object>> handleDuplicateBookException(
 		DuplicateBookException ex) {
-		Map<String, String> error = new HashMap<>();
+		Map<String, Object> error = new HashMap<>();
 		error.put("message", ex.getMessage());
+		error.put("userBookId", ex.getUserBookId());
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
 	}
 

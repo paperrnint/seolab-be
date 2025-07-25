@@ -46,7 +46,9 @@ public class UserBookService {
 			userBookRepository.findByUserUserIdAndBookBookId(userId, book.getBookId());
 
 		if (existingUserBook.isPresent()) {
-			throw new DuplicateBookException("이미 내 서재에 추가된 책입니다.");
+			UserBook userBook = existingUserBook.get();
+			UUID userBookId = userBook.getUserBookId();
+			throw new DuplicateBookException("이미 내 서재에 추가된 책입니다.", userBookId);
 		}
 
 		UserBook userBook = UserBook.builder()
