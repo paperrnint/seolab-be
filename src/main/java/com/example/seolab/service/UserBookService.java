@@ -155,9 +155,7 @@ public class UserBookService {
 		Book book = userBook.getBook();
 
 		AddBookResponse.BookDetail bookDetail = AddBookResponse.BookDetail.builder()
-			.bookId(book.getBookId())
 			.title(book.getTitle())
-			.contents(book.getContents())
 			.isbn(book.getIsbn())
 			.publishedDate(book.getPublishedDate())
 			.authors(book.getAuthors())
@@ -181,9 +179,7 @@ public class UserBookService {
 		Book book = userBook.getBook();
 
 		UserBookResponse.BookInfo bookInfo = UserBookResponse.BookInfo.builder()
-			.bookId(book.getBookId())
 			.title(book.getTitle())
-			.contents(book.getContents())
 			.isbn(book.getIsbn())
 			.publishedDate(book.getPublishedDate())
 			.authors(book.getAuthors())

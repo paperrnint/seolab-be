@@ -32,9 +32,7 @@ public class AddBookResponse {
 	@AllArgsConstructor
 	@Builder
 	public static class BookDetail {
-		private Long bookId;
 		private String title;
-		private String contents;
 		private String isbn;
 		private LocalDate publishedDate;
 		private List<String> authors;
