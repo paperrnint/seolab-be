@@ -31,9 +31,12 @@ public class BookService {
 				log.info("Found existing book by ISBN: {}", firstIsbn);
 				return existingByIsbn.get();
 			}
+			// ISBN이 있지만 찾지 못한 경우, 바로 새 책 생성
+			log.info("No existing book found with ISBN: {}, creating new book", firstIsbn);
+			return createNewBook(bookDto);
 		}
 
-		// 2. title + author + publisher 조합으로 찾기
+		// 2. ISBN이 없는 경우에만 title + author + publisher 조합으로 찾기
 		String firstAuthor = getFirstAuthor(bookDto);
 		if (StringUtils.hasText(bookDto.getTitle()) &&
 			StringUtils.hasText(firstAuthor) &&
