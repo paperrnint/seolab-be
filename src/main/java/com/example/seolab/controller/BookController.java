@@ -74,6 +74,17 @@ public class BookController {
 		return ResponseEntity.ok(toggledBook);
 	}
 
+	@GetMapping("/{userBookId}")
+	public ResponseEntity<UserBookResponse> getUserBook(
+		@PathVariable UUID userBookId,
+		Authentication authentication) {
+
+		Long userId = getUserIdFromAuthentication(authentication);
+		UserBookResponse userBook = userBookService.getUserBook(userId, userBookId);
+
+		return ResponseEntity.ok(userBook);
+	}
+
 	private Long getUserIdFromAuthentication(Authentication authentication) {
 		// Spring Security에서 인증된 User 객체 가져오기
 		User user = (User) authentication.getPrincipal();

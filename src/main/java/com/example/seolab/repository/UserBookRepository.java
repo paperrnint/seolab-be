@@ -17,13 +17,14 @@ public interface UserBookRepository extends JpaRepository<UserBook, UUID> {
 
 	boolean existsByUserUserIdAndBookBookId(Long userId, Long bookId);
 
-	List<UserBook> findByUserUserIdOrderByCreatedAtDesc(Long userId);
+	// updatedAt 기준으로 변경
+	List<UserBook> findByUserUserIdOrderByUpdatedAtDesc(Long userId);
 
-	List<UserBook> findByUserUserIdAndIsReadingOrderByCreatedAtDesc(Long userId, Boolean isReading);
+	List<UserBook> findByUserUserIdAndIsReadingOrderByUpdatedAtDesc(Long userId, Boolean isReading);
 
-	List<UserBook> findByUserUserIdAndIsFavoriteTrueOrderByCreatedAtDesc(Long userId);
+	List<UserBook> findByUserUserIdAndIsFavoriteTrueOrderByUpdatedAtDesc(Long userId);
 
-	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByCreatedAtDesc(
+	List<UserBook> findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByUpdatedAtDesc(
 		Long userId, Boolean isReading);
 
 	long countByUserUserIdAndIsReading(Long userId, Boolean isReading);
