@@ -5,6 +5,7 @@ import com.example.seolab.dto.request.UpdateQuoteRequest;
 import com.example.seolab.dto.response.QuoteResponse;
 import com.example.seolab.entity.Quote;
 import com.example.seolab.entity.UserBook;
+import com.example.seolab.exception.AccessDeniedException;
 import com.example.seolab.repository.QuoteRepository;
 import com.example.seolab.repository.UserBookRepository;
 import lombok.RequiredArgsConstructor;
@@ -192,12 +193,12 @@ public class QuoteService {
 	private UserBook findUserBookByIdAndUserId(UUID userBookId, Long userId) {
 		return userBookRepository.findById(userBookId)
 			.filter(ub -> ub.getUser().getUserId().equals(userId))
-			.orElseThrow(() -> new IllegalArgumentException("접근할 수 없는 책입니다."));
+			.orElseThrow(() -> new AccessDeniedException("접근할 수 없는 책입니다."));
 	}
 
 	private Quote findQuoteByIdAndUserId(UUID quoteId, Long userId) {
 		return quoteRepository.findByQuoteIdAndUserId(quoteId, userId)
-			.orElseThrow(() -> new IllegalArgumentException("접근할 수 없는 문장입니다."));
+			.orElseThrow(() -> new AccessDeniedException("접근할 수 없는 문장입니다."));
 	}
 
 	private QuoteResponse convertToQuoteResponse(Quote quote) {
