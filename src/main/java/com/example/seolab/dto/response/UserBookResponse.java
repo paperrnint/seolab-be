@@ -25,6 +25,7 @@ public class UserBookResponse {
 	private Boolean isReading;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private Long quoteCount;
 
 	@Getter
 	@Setter

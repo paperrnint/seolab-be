@@ -7,7 +7,9 @@ import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.Book;
 import com.example.seolab.entity.User;
 import com.example.seolab.entity.UserBook;
+import com.example.seolab.exception.AccessDeniedException;
 import com.example.seolab.exception.DuplicateBookException;
+import com.example.seolab.repository.QuoteRepository;
 import com.example.seolab.repository.UserBookRepository;
 import com.example.seolab.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ public class UserBookService {
 	private final UserBookRepository userBookRepository;
 	private final UserRepository userRepository;
 	private final BookService bookService;
+	private final QuoteRepository quoteRepository;
 
 	public AddBookResponse addBookToUserLibrary(Long userId, AddBookRequest request) {
 		log.info("Adding book to user {} library: {}", userId, request.getTitle());
@@ -128,7 +131,7 @@ public class UserBookService {
 	private UserBook findUserBookByIdAndUserId(UUID userBookId, Long userId) {
 		return userBookRepository.findById(userBookId)
 			.filter(ub -> ub.getUser().getUserId().equals(userId))
-			.orElseThrow(() -> new IllegalArgumentException("접근할 수 없는 책입니다."));
+			.orElseThrow(() -> new AccessDeniedException("접근할 수 없는 책입니다."));
 	}
 
 	private BookDto convertToBookDto(AddBookRequest request) {
@@ -175,6 +178,8 @@ public class UserBookService {
 			.thumbnail(book.getThumbnail())
 			.build();
 
+		long quoteCount = quoteRepository.countByUserBookUserBookId(userBook.getUserBookId());
+
 		return UserBookResponse.builder()
 			.userBookId(userBook.getUserBookId())
 			.book(bookInfo)
@@ -184,6 +189,7 @@ public class UserBookService {
 			.isReading(userBook.getIsReading())
 			.createdAt(userBook.getCreatedAt())
 			.updatedAt(userBook.getUpdatedAt())
+			.quoteCount(quoteCount)
 			.build();
 	}
 }
