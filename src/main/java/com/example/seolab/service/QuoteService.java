@@ -38,6 +38,10 @@ public class QuoteService {
 			.build();
 
 		Quote savedQuote = quoteRepository.save(quote);
+
+		userBook.updateLastActivity();
+		userBookRepository.save(userBook);
+
 		log.info("Successfully added quote with ID: {}", savedQuote.getQuoteId());
 
 		return convertToQuoteResponse(savedQuote);
@@ -87,6 +91,10 @@ public class QuoteService {
 		quote.setPage(request.getPage());
 
 		Quote savedQuote = quoteRepository.save(quote);
+
+		quote.getUserBook().updateLastActivity();
+		userBookRepository.save(quote.getUserBook());
+
 		log.info("Updated quote with ID: {}", quoteId);
 
 		return convertToQuoteResponse(savedQuote);
@@ -104,13 +112,16 @@ public class QuoteService {
 
 	public void deleteQuote(Long userId, UUID quoteId) {
 		Quote quote = findQuoteByIdAndUserId(quoteId, userId);
+		UserBook userBook = quote.getUserBook();
+
 		quoteRepository.delete(quote);
+
+		userBook.updateLastActivity();
+		userBookRepository.save(userBook);
+
 		log.info("Deleted quote with ID: {}", quoteId);
 	}
 
-	// ====================================
-	// UserBook 기반 메서드들 (새로운 RESTful API용)
-	// ====================================
 
 	@Transactional(readOnly = true)
 	public QuoteResponse getQuoteByUserBookAndQuoteId(Long userId, UUID userBookId, UUID quoteId) {
@@ -129,7 +140,7 @@ public class QuoteService {
 
 	public QuoteResponse updateQuoteByUserBook(Long userId, UUID userBookId, UUID quoteId, UpdateQuoteRequest request) {
 		// userBook 권한 체크
-		findUserBookByIdAndUserId(userBookId, userId);
+		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
 		Quote quote = findQuoteByIdAndUserId(quoteId, userId);
 
@@ -142,6 +153,10 @@ public class QuoteService {
 		quote.setPage(request.getPage());
 
 		Quote savedQuote = quoteRepository.save(quote);
+
+		userBook.updateLastActivity();
+		userBookRepository.save(userBook);
+
 		log.info("Updated quote with ID: {} in userBook: {}", quoteId, userBookId);
 
 		return convertToQuoteResponse(savedQuote);
@@ -168,7 +183,7 @@ public class QuoteService {
 
 	public void deleteQuoteByUserBook(Long userId, UUID userBookId, UUID quoteId) {
 		// userBook 권한 체크
-		findUserBookByIdAndUserId(userBookId, userId);
+		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 
 		Quote quote = findQuoteByIdAndUserId(quoteId, userId);
 
@@ -178,6 +193,10 @@ public class QuoteService {
 		}
 
 		quoteRepository.delete(quote);
+
+		userBook.updateLastActivity();
+		userBookRepository.save(userBook);
+
 		log.info("Deleted quote with ID: {} from userBook: {}", quoteId, userBookId);
 	}
 

@@ -64,10 +64,6 @@ public class UserBook {
 		updatedAt = LocalDateTime.now();
 	}
 
-	@PreUpdate
-	protected void onUpdate() {
-		updatedAt = LocalDateTime.now();
-	}
 
 	public LocalDate getStartDate() {
 		return createdAt != null ? createdAt.toLocalDate() : null;
@@ -85,6 +81,11 @@ public class UserBook {
 
 	public void toggleFavorite() {
 		this.isFavorite = !this.isFavorite;
+	}
+
+	// 문장 활동시에만 호출되는 메서드
+	public void updateLastActivity() {
+		this.updatedAt = LocalDateTime.now();
 	}
 
 	public boolean isCurrentlyReading() {
