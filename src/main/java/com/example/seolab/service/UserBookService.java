@@ -3,8 +3,11 @@ package com.example.seolab.service;
 import com.example.seolab.dto.request.AddBookRequest;
 import com.example.seolab.dto.response.AddBookResponse;
 import com.example.seolab.dto.response.BookDto;
+import com.example.seolab.dto.response.QuoteResponse;
+import com.example.seolab.dto.response.RecentBookResponse;
 import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.Book;
+import com.example.seolab.entity.Quote;
 import com.example.seolab.entity.User;
 import com.example.seolab.entity.UserBook;
 import com.example.seolab.exception.AccessDeniedException;
@@ -99,6 +102,55 @@ public class UserBookService {
 	public UserBookResponse getUserBook(Long userId, UUID userBookId) {
 		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
 		return convertToUserBookResponse(userBook);
+	}
+
+	@Transactional(readOnly = true)
+	public RecentBookResponse getRecentBookWithQuotes(Long userId) {
+		log.info("Getting recent book with quotes for user: {}", userId);
+
+		// updated_at 기준으로 가장 최근 책 조회
+		Optional<UserBook> recentUserBookOpt = userBookRepository.findTopByUserUserIdOrderByUpdatedAtDesc(userId);
+
+		if (recentUserBookOpt.isEmpty()) {
+			log.info("No books found for user: {}", userId);
+			return RecentBookResponse.builder()
+				.recentBook(null)
+				.quotes(List.of())
+				.build();
+		}
+
+		UserBook recentUserBook = recentUserBookOpt.get();
+		UserBookResponse recentBookResponse = convertToUserBookResponse(recentUserBook);
+
+		// 해당 책의 최근 문장 4개 조회 (created_at 기준 최신순)
+		List<Quote> recentQuotes = quoteRepository.findByUserBookUserBookIdOrderByCreatedAtDesc(
+				recentUserBook.getUserBookId())
+			.stream()
+			.limit(4)
+			.toList();
+
+		List<QuoteResponse> quoteResponses = recentQuotes.stream()
+			.map(this::convertToQuoteResponse)
+			.toList();
+
+		log.info("Found recent book '{}' with {} quotes for user: {}",
+			recentUserBook.getBook().getTitle(), quoteResponses.size(), userId);
+
+		return RecentBookResponse.builder()
+			.recentBook(recentBookResponse)
+			.quotes(quoteResponses)
+			.build();
+	}
+
+	private QuoteResponse convertToQuoteResponse(Quote quote) {
+		return QuoteResponse.builder()
+			.quoteId(quote.getQuoteId())
+			.text(quote.getText())
+			.page(quote.getPage())
+			.isFavorite(quote.getIsFavorite())
+			.createdAt(quote.getCreatedAt())
+			.updatedAt(quote.getUpdatedAt())
+			.build();
 	}
 
 	public UserBookResponse markBookAsCompleted(Long userId, UUID userBookId) {

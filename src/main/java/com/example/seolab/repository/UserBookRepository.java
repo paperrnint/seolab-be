@@ -37,4 +37,7 @@ public interface UserBookRepository extends JpaRepository<UserBook, UUID> {
 		"ORDER BY ub.updatedAt DESC")
 	List<UserBook> findRecentBooks(@Param("userId") Long userId,
 		@Param("isReading") Boolean isReading);
+
+	// updated_at 기준으로 가장 최근 책 1개 조회
+	Optional<UserBook> findTopByUserUserIdOrderByUpdatedAtDesc(Long userId);
 }
