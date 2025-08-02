@@ -126,7 +126,7 @@ public class UserBookService {
 		List<Quote> recentQuotes = quoteRepository.findByUserBookUserBookIdOrderByCreatedAtDesc(
 				recentUserBook.getUserBookId())
 			.stream()
-			.limit(4)
+			.limit(10)
 			.toList();
 
 		List<QuoteResponse> quoteResponses = recentQuotes.stream()
