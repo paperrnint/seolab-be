@@ -2,6 +2,7 @@ package com.example.seolab.controller;
 
 import com.example.seolab.dto.request.AddBookRequest;
 import com.example.seolab.dto.response.AddBookResponse;
+import com.example.seolab.dto.response.RecentBookResponse;
 import com.example.seolab.dto.response.UserBookResponse;
 import com.example.seolab.entity.User;
 import com.example.seolab.service.UserBookService;
@@ -83,6 +84,14 @@ public class BookController {
 		UserBookResponse userBook = userBookService.getUserBook(userId, userBookId);
 
 		return ResponseEntity.ok(userBook);
+	}
+
+	@GetMapping("/recent")
+	public ResponseEntity<RecentBookResponse> getRecentBook(Authentication authentication) {
+		Long userId = getUserIdFromAuthentication(authentication);
+		RecentBookResponse response = userBookService.getRecentBookWithQuotes(userId);
+
+		return ResponseEntity.ok(response);
 	}
 
 	private Long getUserIdFromAuthentication(Authentication authentication) {

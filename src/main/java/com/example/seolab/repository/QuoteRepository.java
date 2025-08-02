@@ -47,4 +47,7 @@ public interface QuoteRepository extends JpaRepository<Quote, UUID> {
 		"AND q.userBook.user.userId = :userId")
 	Optional<Quote> findByQuoteIdAndUserId(@Param("quoteId") UUID quoteId,
 		@Param("userId") Long userId);
+
+	// 특정 사용자 책의 모든 문장 조회 (최신순)
+	List<Quote> findByUserBookUserBookIdOrderByCreatedAtDesc(UUID userBookId);
 }
