@@ -2,6 +2,7 @@ package com.example.seolab.service;
 
 import com.example.seolab.dto.request.LoginRequest;
 import com.example.seolab.dto.request.SignUpRequest;
+import com.example.seolab.dto.response.EmailVerificationResponse;
 import com.example.seolab.dto.response.LoginResponse;
 import com.example.seolab.dto.response.SignUpResponse;
 import com.example.seolab.dto.response.TokenResponse;
@@ -31,6 +32,7 @@ public class AuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtUtil jwtUtil;
 	private final AuthenticationManager authenticationManager;
+	private final EmailVerificationService emailVerificationService;
 
 	public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
 		// 인증 시도
@@ -105,29 +107,60 @@ public class AuthService {
 		log.info("User {} logged out successfully", email);
 	}
 
+	// 이메일 인증 코드 발송
+	public EmailVerificationResponse sendVerificationCode(String email) {
+		// 이미 가입된 이메일인지 확인
+		if (userRepository.existsByEmail(email)) {
+			throw new IllegalArgumentException("이미 가입된 이메일입니다.");
+		}
+
+		emailVerificationService.sendVerificationCode(email);
+
+		return EmailVerificationResponse.builder()
+			.message("인증 코드가 이메일로 발송되었습니다.")
+			.expiresInSeconds(emailVerificationService.getExpirationSeconds())
+			.build();
+	}
+
+	// 인증 코드 검증
+	public boolean verifyCode(String email, String code) {
+		return emailVerificationService.verifyCode(email, code);
+	}
+
+	// 기존 signUp 메서드를 이메일 인증 포함 버전으로 완전 교체
 	public SignUpResponse signUp(SignUpRequest signUpRequest) {
-		// 이메일 중복 체크
-		if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+		String email = signUpRequest.getEmail();
+
+		// 이메일 인증 여부 확인
+		if (!emailVerificationService.isEmailVerified(email)) {
+			throw new IllegalArgumentException("이메일 인증이 필요합니다.");
+		}
+
+		// 이메일 중복 체크 (다시 한번 확인)
+		if (userRepository.existsByEmail(email)) {
 			throw new IllegalArgumentException("이미 사용중인 이메일입니다.");
 		}
 
 		// 이메일에서 username 추출 (@ 앞부분)
-		String username = signUpRequest.getEmail().split("@")[0];
+		String username = email.split("@")[0];
 
 		// 사용자 생성
 		User user = User.builder()
-			.email(signUpRequest.getEmail())
+			.email(email)
 			.username(username)
 			.passwordHash(passwordEncoder.encode(signUpRequest.getPassword()))
 			.build();
 
 		User savedUser = userRepository.save(user);
 
-		log.info("New user registered: {}", savedUser.getEmail());
+		// 인증 완료 상태 정리
+		emailVerificationService.clearVerifiedStatus(email);
+
+		log.info("New user registered with email verification: {}", savedUser.getEmail());
 
 		return SignUpResponse.builder()
 			.email(savedUser.getEmail())
-			.username(savedUser.getDisplayName()) // 실제 username 필드 반환
+			.username(savedUser.getDisplayName())
 			.build();
 	}
 
