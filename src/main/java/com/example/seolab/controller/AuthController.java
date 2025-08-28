@@ -1,7 +1,13 @@
 package com.example.seolab.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import com.example.seolab.dto.request.EmailVerificationRequest;
 import com.example.seolab.dto.request.LoginRequest;
 import com.example.seolab.dto.request.SignUpRequest;
+import com.example.seolab.dto.request.VerifyCodeRequest;
+import com.example.seolab.dto.response.EmailVerificationResponse;
 import com.example.seolab.dto.response.LoginResponse;
 import com.example.seolab.dto.response.SignUpResponse;
 import com.example.seolab.dto.response.TokenResponse;
@@ -65,6 +71,28 @@ public class AuthController {
 	public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
 		SignUpResponse signUpResponse = authService.signUp(signUpRequest);
 		return ResponseEntity.status(HttpStatus.CREATED).body(signUpResponse);
+	}
+
+	@PostMapping("/verify/request")
+	public ResponseEntity<EmailVerificationResponse> sendVerificationCode(
+		@Valid @RequestBody EmailVerificationRequest request) {
+
+		EmailVerificationResponse response = authService.sendVerificationCode(request.getEmail());
+		return ResponseEntity.ok(response);
+	}
+
+	@PostMapping("/verify")
+	public ResponseEntity<Map<String, String>> verifyCode(@Valid @RequestBody VerifyCodeRequest request) {
+		boolean isValid = authService.verifyCode(request.getEmail(), request.getCode());
+
+		Map<String, String> response = new HashMap<>();
+		if (isValid) {
+			response.put("message", "이메일 인증이 완료되었습니다.");
+			return ResponseEntity.ok(response);
+		} else {
+			response.put("message", "인증 코드가 올바르지 않거나 만료되었습니다.");
+			return ResponseEntity.badRequest().body(response);
+		}
 	}
 
 	@GetMapping("/me")

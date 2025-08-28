@@ -102,4 +102,18 @@ public class GlobalExceptionHandler {
 		error.put("message", "유효하지 않은 토큰입니다.");
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
 	}
+
+	@ExceptionHandler(RuntimeException.class)
+	public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException ex) {
+		Map<String, String> error = new HashMap<>();
+
+		// 이메일 발송 실패 등의 런타임 에러 처리
+		if (ex.getMessage().contains("이메일 발송")) {
+			error.put("message", "이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.");
+			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
+		}
+
+		error.put("message", ex.getMessage());
+		return ResponseEntity.badRequest().body(error);
+	}
 }
