@@ -74,11 +74,20 @@ public class AuthController {
 	}
 
 	@PostMapping("/verify/request")
-	public ResponseEntity<EmailVerificationResponse> sendVerificationCode(
+	public ResponseEntity<?> sendVerificationCode(
 		@Valid @RequestBody EmailVerificationRequest request) {
 
-		EmailVerificationResponse response = authService.sendVerificationCode(request.getEmail());
-		return ResponseEntity.ok(response);
+		try {
+			EmailVerificationResponse response = authService.sendVerificationCode(request.getEmail());
+			return ResponseEntity.ok(response);
+		} catch (IllegalArgumentException ex) {
+			if (ex.getMessage().contains("이미 가입된 이메일")) {
+				Map<String, String> error = new HashMap<>();
+				error.put("message", ex.getMessage());
+				return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+			}
+			throw ex;
+		}
 	}
 
 	@PostMapping("/verify")
@@ -91,7 +100,7 @@ public class AuthController {
 			return ResponseEntity.ok(response);
 		} else {
 			response.put("message", "인증 코드가 올바르지 않거나 만료되었습니다.");
-			return ResponseEntity.badRequest().body(response);
+			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
 		}
 	}
 
