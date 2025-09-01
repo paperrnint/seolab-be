@@ -94,8 +94,18 @@ public class BookController {
 		return ResponseEntity.ok(response);
 	}
 
+	@DeleteMapping("/{userBookId}")
+	public ResponseEntity<Void> deleteBook(
+		@PathVariable UUID userBookId,
+		Authentication authentication) {
+
+		Long userId = getUserIdFromAuthentication(authentication);
+		userBookService.deleteUserBook(userId, userBookId);
+
+		return ResponseEntity.noContent().build();
+	}
+
 	private Long getUserIdFromAuthentication(Authentication authentication) {
-		// Spring Security에서 인증된 User 객체 가져오기
 		User user = (User) authentication.getPrincipal();
 		return user.getUserId();
 	}
