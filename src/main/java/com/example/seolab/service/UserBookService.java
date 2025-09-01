@@ -73,6 +73,7 @@ public class UserBookService {
 			.build();
 	}
 
+	@Transactional
 	public void deleteUserBook(Long userId, UUID userBookId) {
 		log.info("Deleting userBook {} for user {}", userBookId, userId);
 
