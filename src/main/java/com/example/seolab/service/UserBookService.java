@@ -73,23 +73,33 @@ public class UserBookService {
 			.build();
 	}
 
+	public void deleteUserBook(Long userId, UUID userBookId) {
+		log.info("Deleting userBook {} for user {}", userBookId, userId);
+
+		UserBook userBook = findUserBookByIdAndUserId(userBookId, userId);
+
+		List<Quote> quotes = quoteRepository.findByUserBookUserBookIdOrderByCreatedAtAsc(userBookId);
+		if (!quotes.isEmpty()) {
+			quoteRepository.deleteAll(quotes);
+			log.info("Deleted {} quotes for userBook: {}", quotes.size(), userBookId);
+		}
+
+		userBookRepository.delete(userBook);
+		log.info("Successfully deleted userBook: {} for user: {}", userBookId, userId);
+	}
+
 	@Transactional(readOnly = true)
 	public List<UserBookResponse> getUserBooks(Long userId, Boolean favorite, Boolean reading) {
 		List<UserBook> userBooks;
 
-		// 쿼리 파라미터에 따른 조건부 조회 - 모두 updatedAt 기준으로 변경
 		if (favorite != null && favorite && reading != null) {
-			// favorite=true&reading=true/false: 즐겨찾기이면서 읽는 중/완독인 책
 			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueAndIsReadingOrderByUpdatedAtDesc(
 				userId, reading);
 		} else if (favorite != null && favorite) {
-			// favorite=true: 즐겨찾기 책만
 			userBooks = userBookRepository.findByUserUserIdAndIsFavoriteTrueOrderByUpdatedAtDesc(userId);
 		} else if (reading != null) {
-			// reading=true/false: 읽는 중/완독인 책만
 			userBooks = userBookRepository.findByUserUserIdAndIsReadingOrderByUpdatedAtDesc(userId, reading);
 		} else {
-			// 파라미터 없음: 전체 책 목록
 			userBooks = userBookRepository.findByUserUserIdOrderByUpdatedAtDesc(userId);
 		}
 
@@ -108,7 +118,6 @@ public class UserBookService {
 	public RecentBookResponse getRecentBookWithQuotes(Long userId) {
 		log.info("Getting recent book with quotes for user: {}", userId);
 
-		// updated_at 기준으로 가장 최근 책 조회
 		Optional<UserBook> recentUserBookOpt = userBookRepository.findTopByUserUserIdOrderByUpdatedAtDesc(userId);
 
 		if (recentUserBookOpt.isEmpty()) {
@@ -122,7 +131,6 @@ public class UserBookService {
 		UserBook recentUserBook = recentUserBookOpt.get();
 		UserBookResponse recentBookResponse = convertToUserBookResponse(recentUserBook);
 
-		// 해당 책의 최근 문장 4개 조회 (created_at 기준 최신순)
 		List<Quote> recentQuotes = quoteRepository.findByUserBookUserBookIdOrderByCreatedAtDesc(
 				recentUserBook.getUserBookId())
 			.stream()
