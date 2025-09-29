@@ -40,8 +40,22 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	// H2 Database (테스트용)
+	testImplementation 'com.h2database:h2'
+
+	// MockMvc
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	// Redis 테스트
+	testImplementation 'it.ozimov:embedded-redis:0.7.3'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+
+	testLogging {
+		events "passed", "skipped", "failed"
+		exceptionFormat "full"
+	}
 }
