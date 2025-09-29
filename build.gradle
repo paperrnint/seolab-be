@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'jacoco'
 }
 
 group = 'com.example'
@@ -48,14 +49,30 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	// Redis 테스트
-	testImplementation 'it.ozimov:embedded-redis:0.7.3'
+	testImplementation('it.ozimov:embedded-redis:0.7.3') {
+		exclude group: 'org.slf4j', module: 'slf4j-simple'
+	}
 }
+
+jacoco {
+	toolVersion = "0.8.11"  // 최신 버전 사용
+}
+
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
 
-	testLogging {
-		events "passed", "skipped", "failed"
-		exceptionFormat "full"
+jacocoTestReport {
+	dependsOn test  // 테스트가 실행된 후에 리포트 생성
+
+	reports {
+		xml.required = true   // XML 리포트 생성
+		html.required = true  // HTML 리포트 생성
+		csv.required = false  // CSV 리포트는 생성 안 함
 	}
+
+	// HTML 리포트 위치: build/reports/jacoco/test/html/index.html
+	// XML 리포트 위치: build/reports/jacoco/test/jacocoTestReport.xml
 }
