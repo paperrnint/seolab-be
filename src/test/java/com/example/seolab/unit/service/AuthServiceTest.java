@@ -76,7 +76,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("유효한 이메일과 비밀번호로 로그인하면 AccessToken과 사용자 정보를 반환한다")
+	@DisplayName("유효한 이메일과 비밀번호로 로그인하면 AccessToken과 사용자 정보를 반환")
 	void login_withValidCredentials_returnsTokenAndUserInfo() {
 		// given
 		when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -109,7 +109,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("잘못된 비밀번호로 로그인하면 예외가 발생한다")
+	@DisplayName("잘못된 비밀번호로 로그인하면 예외가 발생")
 	void login_withInvalidPassword_throwsException() {
 		// given
 		when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -121,7 +121,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("존재하지 않는 사용자로 로그인하면 예외가 발생한다")
+	@DisplayName("존재하지 않는 사용자로 로그인하면 예외가 발생")
 	void login_withNonExistentUser_throwsException() {
 		// given
 		when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
@@ -136,7 +136,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("유효한 RefreshToken으로 AccessToken을 갱신할 수 있다")
+	@DisplayName("유효한 RefreshToken으로 AccessToken을 갱신가능")
 	void refreshToken_withValidToken_returnsNewAccessToken() {
 		// given
 		String refreshToken = "valid-refresh-token";
@@ -155,7 +155,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("유효하지 않은 RefreshToken으로 갱신하면 예외가 발생한다")
+	@DisplayName("유효하지 않은 RefreshToken으로 갱신하면 예외가 발생")
 	void refreshToken_withInvalidToken_throwsException() {
 		// given
 		String invalidToken = "invalid-token";
@@ -168,7 +168,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("이메일 인증 코드 발송 요청 시 이미 가입된 이메일이면 예외가 발생한다")
+	@DisplayName("이메일 인증 코드 발송 요청 시 이미 가입된 이메일이면 예외가 발생")
 	void sendVerificationCode_withExistingEmail_throwsException() {
 		// given
 		String email = "existing@example.com";
@@ -181,7 +181,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("신규 이메일로 인증 코드 발송 요청 시 성공한다")
+	@DisplayName("신규 이메일로 인증 코드 발송 요청 시 성공")
 	void sendVerificationCode_withNewEmail_succeeds() {
 		// given
 		String email = "new@example.com";
@@ -199,7 +199,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("이메일 인증 완료 후 회원가입하면 사용자가 생성된다")
+	@DisplayName("이메일 인증 완료 후 회원가입하면 사용자가 생성")
 	void signUp_withVerifiedEmail_createsUser() {
 		// given
 		SignUpRequest request = new SignUpRequest(
@@ -246,7 +246,7 @@ class AuthServiceTest {
 	}
 
 	@Test
-	@DisplayName("이미 가입된 이메일로 회원가입하면 예외가 발생한다")
+	@DisplayName("이미 가입된 이메일로 회원가입하면 예외가 발생")
 	void signUp_withDuplicateEmail_throwsException() {
 		// given
 		SignUpRequest request = new SignUpRequest(

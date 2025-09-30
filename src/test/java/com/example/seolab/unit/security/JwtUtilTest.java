@@ -38,7 +38,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("AccessToken 생성 시 유효한 JWT 토큰이 생성된다")
+	@DisplayName("AccessToken 생성 시 유효한 JWT 토큰이 생성")
 	void generateAccessToken_createsValidToken() {
 		// when
 		String token = jwtUtil.generateAccessToken(userDetails);
@@ -50,7 +50,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("RefreshToken 생성 시 유효한 JWT 토큰이 생성된다")
+	@DisplayName("RefreshToken 생성 시 유효한 JWT 토큰이 생성")
 	void generateRefreshToken_createsValidToken() {
 		// when
 		String token = jwtUtil.generateRefreshToken(userDetails);
@@ -74,7 +74,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("토큰에서 만료 시간을 추출할 수 있다")
+	@DisplayName("토큰에서 만료 시간을 추출할 수 있음")
 	void extractExpiration_returnsValidDate() {
 		// given
 		String token = jwtUtil.generateAccessToken(userDetails);
@@ -87,7 +87,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("유효한 토큰은 검증을 통과한다")
+	@DisplayName("유효한 토큰은 검증을 통과")
 	void validateToken_withValidToken_returnsTrue() {
 		// given
 		String token = jwtUtil.generateAccessToken(userDetails);
@@ -100,7 +100,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("잘못된 사용자의 토큰은 검증에 실패한다")
+	@DisplayName("잘못된 사용자의 토큰은 검증에 실패")
 	void validateToken_withWrongUser_returnsFalse() {
 		// given
 		String token = jwtUtil.generateAccessToken(userDetails);
@@ -119,7 +119,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("잘못된 형식의 토큰은 검증에 실패한다")
+	@DisplayName("잘못된 형식의 토큰은 검증에 실패")
 	void validateToken_withInvalidFormat_returnsFalse() {
 		// given
 		String invalidToken = "invalid.token.format";
@@ -132,7 +132,7 @@ class JwtUtilTest {
 	}
 
 	@Test
-	@DisplayName("AccessToken과 RefreshToken의 만료 시간이 다르다")
+	@DisplayName("AccessToken과 RefreshToken의 만료 시간이 다름")
 	void accessTokenAndRefreshToken_haveDifferentExpiration() {
 		// when
 		String accessToken = jwtUtil.generateAccessToken(userDetails);
