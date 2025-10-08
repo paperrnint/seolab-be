@@ -52,6 +52,8 @@ dependencies {
 	testImplementation('it.ozimov:embedded-redis:0.7.3') {
 		exclude group: 'org.slf4j', module: 'slf4j-simple'
 	}
+	// actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 }
 
 jacoco {
@@ -65,14 +67,10 @@ tasks.named('test') {
 }
 
 jacocoTestReport {
-	dependsOn test  // 테스트가 실행된 후에 리포트 생성
-
+	dependsOn test
 	reports {
-		xml.required = true   // XML 리포트 생성
-		html.required = true  // HTML 리포트 생성
-		csv.required = false  // CSV 리포트는 생성 안 함
+		xml.required = true
+		html.required = true
+		csv.required = false
 	}
-
-	// HTML 리포트 위치: build/reports/jacoco/test/html/index.html
-	// XML 리포트 위치: build/reports/jacoco/test/jacocoTestReport.xml
 }
