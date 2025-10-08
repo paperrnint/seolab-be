@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: seolab-be-test
+
+  # H2 Database 설정 (테스트용)
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+    defer-datasource-initialization: false
+
+  h2:
+    console:
+      enabled: true
+
+  # Redis 테스트 설정
+  data:
+    redis:
+      host: localhost
+      port: 6370
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # 메일 설정 (테스트용)
+  mail:
+    host: localhost
+    port: 3025
+    username: test@example.com
+    password: test-password
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+        mime:
+          charset: UTF-8
+
+# JWT 설정 (테스트용)
+jwt:
+  secret: dGVzdFNlY3JldEtleUZvckpXVFRlc3RpbmdQdXJwb3Nlc09ubHlNdXN0QmVMb25nRW5vdWdo
+  access-token-validity: 3600000 # 1시간
+  refresh-token-validity: 604800000 # 7일
+
+# 카카오 API 설정 (테스트용)
+kakao:
+  api:
+    key: test-kakao-api-key-for-testing-only
+    book-search-url: https://dapi.kakao.com/v3/search/book
+
+# 이메일 인증 설정
+email:
+  verification:
+    expiration: 300 # 5분
+    code-length: 6
+
+# 로깅 설정
+logging:
+  level:
+    root: WARN
+    com.example.seolab: DEBUG
+    org.springframework.security: WARN
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
