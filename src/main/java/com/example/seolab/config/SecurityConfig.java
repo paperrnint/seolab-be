@@ -43,6 +43,7 @@ public class SecurityConfig {
 			.authorizeHttpRequests(authz -> authz
 				.requestMatchers("/api/auth/login", "/api/auth/signup",
 					"/api/auth/refresh", "/api/auth/verify/**").permitAll()
+				.requestMatchers("/actuator/**").permitAll()
 				.anyRequest().authenticated()
 			)
 			.sessionManagement(session -> session
