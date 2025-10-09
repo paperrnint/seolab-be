@@ -161,17 +161,17 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          
+
           # 애플리케이션 디렉토리 생성
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} '
             mkdir -p ~/app
           '
-          
+
           # JAR 파일 전송
           scp -o StrictHostKeyChecking=no -i private_key.pem \
             ${{ steps.jar.outputs.file }} \
             ${USER}@${HOST}:~/app/application.jar
-          
+
           # EC2에서 application-prod.yml 생성 및 애플리케이션 재시작
           ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} "
             # application-prod.yml 생성
@@ -223,6 +223,8 @@ jobs:
             verification:
               expiration: 300
               code-length: 6
+          cookie:
+            domain: .dotoribook.site
           server:
             port: 8080
           management:
@@ -239,19 +241,19 @@ jobs:
               root: INFO
               com.example.seolab: INFO
           EOFPROD
-          
+
             # 애플리케이션 재시작
             sudo systemctl restart seolab
-          
+
             # 시작 대기
             echo '⏳ Waiting for application to start...'
             sleep 10
-          
+
             # 헬스 체크
             if sudo systemctl is-active --quiet seolab; then
               echo '✅ Application started successfully'
               sudo systemctl status seolab --no-pager
-          
+
               # Actuator 헬스 체크
               echo '🏥 Checking health endpoint...'
               for i in {1..30}; do
@@ -263,7 +265,7 @@ jobs:
                 echo \"Attempt \$i/30: Waiting for health endpoint...\"
                 sleep 2
               done
-          
+
               echo '⚠️ Health endpoint not responding, but service is running'
               exit 0
             else
@@ -273,7 +275,7 @@ jobs:
               exit 1
             fi
           "
-          
+
           rm -f private_key.pem
 
       - name: Deployment Status
