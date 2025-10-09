@@ -14,6 +14,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,6 +35,9 @@ public class AuthService {
 	private final JwtUtil jwtUtil;
 	private final AuthenticationManager authenticationManager;
 	private final EmailVerificationService emailVerificationService;
+
+	@Value("${cookie.domain:#{null}}")
+	private String cookieDomain;
 
 	public LoginResponse login(LoginRequest loginRequest, HttpServletResponse response) {
 		// 인증 시도
@@ -57,6 +62,12 @@ public class AuthService {
 		refreshTokenCookie.setSecure(true); // HTTPS에서만 전송
 		refreshTokenCookie.setPath("/");
 		refreshTokenCookie.setMaxAge(7 * 24 * 60 * 60); // 7일
+
+		if (cookieDomain != null && !cookieDomain.isEmpty()) {
+			refreshTokenCookie.setDomain(cookieDomain);
+			log.debug("Cookie domain set to: {}", cookieDomain);
+		}
+
 		response.addCookie(refreshTokenCookie);
 
 		log.info("User {} logged in successfully", user.getEmail());
@@ -102,6 +113,12 @@ public class AuthService {
 		refreshTokenCookie.setSecure(true);
 		refreshTokenCookie.setPath("/");
 		refreshTokenCookie.setMaxAge(0); // 쿠키 만료시간을 0으로 설정하여 삭제
+
+		if (cookieDomain != null && !cookieDomain.isEmpty()) {
+			refreshTokenCookie.setDomain(cookieDomain);
+			log.debug("Cookie domain set to: {}", cookieDomain);
+		}
+
 		response.addCookie(refreshTokenCookie);
 
 		log.info("User {} logged out successfully", email);
