@@ -158,73 +158,123 @@ jobs:
           PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           HOST: ${{ secrets.EC2_HOST }}
           USER: ${{ secrets.EC2_USERNAME }}
-          JAR_NAME: ${{ steps.jar.outputs.name }}
         run: |
-          # PEM 키 저장
-          printf "%s" "$PRIVATE_KEY" > private_key.pem
+          echo "$PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
           
-          # EC2에 app 디렉토리 생성
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} 'mkdir -p ~/app'
+          # 애플리케이션 디렉토리 생성
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} '
+            mkdir -p ~/app
+          '
           
-          # JAR 업로드
+          # JAR 파일 전송
           scp -o StrictHostKeyChecking=no -i private_key.pem \
             ${{ steps.jar.outputs.file }} \
-            ${USER}@${HOST}:~/app/${JAR_NAME}
-
-          # prod 설정 파일 업로드
-          cat > application-prod.yml <<EOFPROD
+            ${USER}@${HOST}:~/app/application.jar
+          
+          # EC2에서 application-prod.yml 생성 및 애플리케이션 재시작
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} "
+            # application-prod.yml 생성
+            cat > ~/app/application-prod.yml << 'EOFPROD'
           spring:
+            application:
+              name: seolab-be
             datasource:
               url: jdbc:mysql://${{ secrets.RDS_HOST }}:3306/seolab_schema?serverTimezone=Asia/Seoul
               username: ${{ secrets.RDS_USERNAME }}
               password: ${{ secrets.RDS_PASSWORD }}
+              driver-class-name: com.mysql.cj.jdbc.Driver
+            jpa:
+              hibernate:
+                ddl-auto: update
+              properties:
+                hibernate:
+                  format_sql: false
+                  show_sql: false
+              database-platform: org.hibernate.dialect.MySQL8Dialect
+            data:
+              redis:
+                host: localhost
+                port: 6379
+                timeout: 2000ms
             mail:
               host: smtp.gmail.com
               port: 587
               username: ${{ secrets.EMAIL_USERNAME }}
               password: ${{ secrets.EMAIL_PASSWORD }}
+              properties:
+                mail:
+                  smtp:
+                    auth: true
+                    starttls:
+                      enable: true
+                      required: true
+                  mime:
+                    charset: UTF-8
           jwt:
             secret: ${{ secrets.JWT_SECRET }}
+            access-token-validity: 900000
+            refresh-token-validity: 604800000
+          kakao:
+            api:
+              key: ${{ secrets.KAKAO_API_KEY }}
+              book-search-url: https://dapi.kakao.com/v3/search/book
+          email:
+            verification:
+              expiration: 300
+              code-length: 6
+          server:
+            port: 8080
+          management:
+            endpoints:
+              web:
+                exposure:
+                  include: health
+                base-path: /actuator
+            endpoint:
+              health:
+                show-details: always
+          logging:
+            level:
+              root: INFO
+              com.example.seolab: INFO
           EOFPROD
-
-          scp -o StrictHostKeyChecking=no -i private_key.pem application-prod.yml ${USER}@${HOST}:~/app/
-
-          # EC2에서 애플리케이션 실행
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ${USER}@${HOST} "
-            echo '🛑 Stopping existing application...'
-            pkill -f '${JAR_NAME}' || true
-            sleep 3
-
-            echo '🚀 Starting application...'
-            cd ~/app
-            nohup java -jar -Xms256m -Xmx512m \
-              -Dspring.config.location=file:./application-prod.yml \
-              -Dspring.profiles.active=prod \
-              ${JAR_NAME} > app.log 2>&1 &
-
+          
+            # 애플리케이션 재시작
+            sudo systemctl restart seolab
+          
+            # 시작 대기
             echo '⏳ Waiting for application to start...'
-            sleep 15
-
-            echo '🏥 Checking health endpoint...'
-            for i in {1..30}; do
-              if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
-                echo '✅ Health check passed!'
-                curl -s http://localhost:8080/actuator/health
-                echo '📊 Application is running with PID:'
-                pgrep -f '${JAR_NAME}'
-                exit 0
-              fi
-              echo \"Attempt \$i/30: Waiting...\"
-              sleep 2
-            done
-
-            echo '❌ Health endpoint not responding'
-            tail -n 50 ~/app/app.log
-            exit 1
+            sleep 10
+          
+            # 헬스 체크
+            if sudo systemctl is-active --quiet seolab; then
+              echo '✅ Application started successfully'
+              sudo systemctl status seolab --no-pager
+          
+              # Actuator 헬스 체크
+              echo '🏥 Checking health endpoint...'
+              for i in {1..30}; do
+                if curl -f http://localhost:8080/actuator/health > /dev/null 2>&1; then
+                  echo '✅ Health check passed!'
+                  curl -s http://localhost:8080/actuator/health | jq '.'
+                  exit 0
+                fi
+                echo \"Attempt \$i/30: Waiting for health endpoint...\"
+                sleep 2
+              done
+          
+              echo '⚠️ Health endpoint not responding, but service is running'
+              exit 0
+            else
+              echo '❌ Failed to start application'
+              echo '📋 Last 100 lines of logs:'
+              sudo journalctl -u seolab -n 100 --no-pager
+              exit 1
+            fi
           "
-
-          rm -f private_key.pem application-prod.yml
+          
+          rm -f private_key.pem
 
       - name: Deployment Status
         if: always()
