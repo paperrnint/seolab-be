@@ -112,7 +112,7 @@ jobs:
               expiration: 300
               code-length: 6
           cookie:
-            domain: .dotoribook.site
+            domain: dotoribook.site
           server:
             port: 8080
           management:
@@ -224,7 +224,7 @@ jobs:
               expiration: 300
               code-length: 6
           cookie:
-            domain: .dotoribook.site
+            domain: dotoribook.site
           server:
             port: 8080
           management:

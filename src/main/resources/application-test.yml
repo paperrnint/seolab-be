@@ -68,7 +68,7 @@ email:
     expiration: 300 # 5분
     code-length: 6
 cookie:
-  domain: .dotoribook.site
+  domain: dotoribook.site
 # 로깅 설정
 logging:
   level:
